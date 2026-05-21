@@ -11,12 +11,11 @@ export const dashboardStats = {
         disputeRate: 2.39,
     },
     charts: {
-        topCategories: [
-            { name: "Plumbing", jobs: 312, revenue: 1120000 },
-            { name: "Electrical", jobs: 234, revenue: 845000 },
-            { name: "AC Repair", jobs: 178, revenue: 620000 },
-            { name: "Carpentry", jobs: 67, revenue: 158000 },
-            { name: "Painting", jobs: 56, revenue: 102000 },
+        training: [
+            { name: "Attended DCA Basic", count: 312},
+            { name: "Attended DCA Maturity", count: 234},
+            { name: "Attended Encounter", count: 178},
+            { name: "Attended DLI", count: 67},
         ],
     },
 };

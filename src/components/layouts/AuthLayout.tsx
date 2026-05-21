@@ -28,7 +28,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
                     <div className="space-y-8">
                         <div className="space-y-4">
                             <h1 className="text-4xl font-bold font-heading leading-tight xl:text-5xl">
-                                The Backbone of <br />
+                                The Core of <br />
                                 <span className="text-gradient">Thriving Church</span> 
                             </h1>
                             <p className="max-w-xl text-lg">

@@ -1,25 +1,14 @@
 import {
   LayoutDashboard,
   Users,
-  UserCheck,
-  Briefcase,
   ShieldAlert,
-  DollarSign,
   BarChart3,
-  Layers,
-  // MessageSquare,
-  Megaphone,
-  // Settings,
-  Smartphone,
-  Database,
-  // Bell,
   LogOut,
-  Gift,
-  // ScanHeart,
+  UserPlus,
 } from "lucide-react";
 
 import { NavLink } from "../NavLink";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logout } from "../../modules/auth/authSlice";
 import { SidebarHeader } from "../ui/sidebar";
 import images from "../../utils/images";
@@ -35,34 +24,14 @@ const sections: SidebarSection[] = [
     label: "Main",
     items: [
       { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-      // { title: "Live Activity", url: "/activity", icon: Bell },
-      // { title: "System Health", url: "/data/health", icon: ScanHeart },
     ],
   },
 
   {
-    label: "Users & Verification",
+    label: "User Management",
     items: [
-      { title: "All Users", url: "/users", icon: Users },
-      { title: "Artisan Verification", url: "/verification", icon: UserCheck },
-      { title: "Blacklisted Users", url: "/users/blacklisted", icon: ShieldAlert },
-    ],
-  },
-
-  {
-    label: "Jobs & Disputes",
-    items: [
-      { title: "Service Categories", url: "/categories", icon: Layers },
-      { title: "Job Monitoring", url: "/jobs", icon: Briefcase },
-    ],
-  },
-
-  {
-    label: "Finance",
-    items: [
-      { title: "Revenue Dashboard", url: "/finance/revenue", icon: DollarSign },
-      // { title: "Payouts", url: "/finance/payouts", icon: DollarSign },
-      // { title: "Refunds", url: "/finance/refunds", icon: DollarSign },
+      { title: "All Members", url: "/members", icon: Users },
+      { title: "Visitors", url: "/visitors", icon: UserPlus },
     ],
   },
 
@@ -74,45 +43,9 @@ const sections: SidebarSection[] = [
   },
 
   {
-    label: "Communication",
-    items: [
-      // { title: "Chat", url: "/chat", icon: MessageSquare },
-      // { title: "Notifications", url: "/notifications", icon: Bell },
-      { title: "Broadcast", url: "/broadcast", icon: Megaphone },
-      { title: "Disputes", url: "/disputes", icon: ShieldAlert },
-    ],
-  },
-
-  {
-    label: "Growth & Promotions",
-    items: [
-      // { title: "Promo Codes", url: "/promotions/codes", icon: Megaphone },
-      { title: "Referrals", url: "/promotions/referrals", icon: Gift },
-    ],
-  },
-
-  {
     label: "System",
     items: [
-      // { title: "System Config", url: "/system/config", icon: Settings },
-      // { title: "Feature Flags", url: "/system/flags", icon: Settings },
       { title: "Audit Logs", url: "/system/audit", icon: ShieldAlert },
-    ],
-  },
-
-  {
-    label: "Mobile App",
-    items: [
-      { title: "App Management", url: "/mobile", icon: Smartphone },
-      { title: "Crash Analytics", url: "/mobile/crashes", icon: BarChart3 },
-    ],
-  },
-
-  {
-    label: "Data Management",
-    items: [
-      { title: "Data Export", url: "/data/export", icon: Database },
-      { title: "Backups", url: "/data/backups", icon: Database },
     ],
   },
 ];
@@ -174,11 +107,13 @@ export default function AppSidebar({
             {collapsed ? (
               <img src={isDark ? images.icon : images.icon} alt="logo" width={35} />
             ) : (
-              <img
-                src={isDark ? images.icon : images.icon}
-                alt="logo"
-                width={133}
-              />
+              <Link to="/" className="flex items-center gap-3">
+                  <img src={isDark ? images.icon : images.icon} alt="Dominion City" width={35} />
+                  <div className="flex flex-col">
+                      <h1 className="text-[17px] font-bold">Dominion City</h1>
+                      <p className="text-[14px] text-muted-foreground">Church Database</p>
+                  </div>
+              </Link>
             )}
           </NavLink>
         </SidebarHeader>

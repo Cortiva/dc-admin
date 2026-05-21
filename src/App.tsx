@@ -15,9 +15,9 @@ import ResetPasswordPage from "./modules/auth/ResetPassword";
 import Dashboard from "./modules/dashboard/DashboardPage";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
 import NotFound from "./modules/NotFound";
-import UsersPage from "./modules/users/UsersPage";
-import BlacklistedUsersPage from "./modules/users/BlacklistedUsersPage";
 import SystemAuditLogsPage from "./modules/users/SystemAuditLogs";
+import MembersPage from "./modules/members/MembersPage";
+import VisitorsPage from "./modules/members/VisitorsPage";
 // import ChatPage from "./modules/chat/ChatPage";
 
 const queryClient = new QueryClient();
@@ -45,8 +45,8 @@ function App() {
               {/* PROTECTED ROUTES (only accessible when logged in) */}
               <Route path="/" element={ <A><Dashboard /></A>}/>
               <Route path="/dashboard" element={ <A><Dashboard /></A>}/>
-              <Route path="/users" element={ <A><UsersPage /></A>}/>
-              <Route path="/users/blacklisted" element={ <A><BlacklistedUsersPage /></A>}/>
+              <Route path="/members" element={ <A><MembersPage /></A>}/>
+              <Route path="/visitors" element={ <A><VisitorsPage /></A>}/>
               <Route path="/system/audit" element={ <A><SystemAuditLogsPage /></A>}/>
               {/* <Route path="/chat" element={ <A><ChatPage /></A>}/> */}
 
