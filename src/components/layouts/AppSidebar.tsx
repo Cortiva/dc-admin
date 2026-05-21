@@ -111,7 +111,7 @@ export default function AppSidebar({
                   <img src={isDark ? images.icon : images.icon} alt="Dominion City" width={35} />
                   <div className="flex flex-col">
                       <h1 className="text-[17px] font-bold">Dominion City</h1>
-                      <p className="text-[14px] text-muted-foreground">Church Database</p>
+                      <p className="text-[14px] text-muted-foreground">Surulere</p>
                   </div>
               </Link>
             )}
