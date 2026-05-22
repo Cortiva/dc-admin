@@ -18,6 +18,7 @@ import NotFound from "./modules/NotFound";
 import SystemAuditLogsPage from "./modules/users/SystemAuditLogs";
 import MembersPage from "./modules/members/MembersPage";
 import VisitorsPage from "./modules/members/VisitorsPage";
+import NotificationsPage from "./modules/notification/NotificationsPage";
 // import ChatPage from "./modules/chat/ChatPage";
 
 const queryClient = new QueryClient();
@@ -48,7 +49,7 @@ function App() {
               <Route path="/members" element={ <A><MembersPage /></A>}/>
               <Route path="/visitors" element={ <A><VisitorsPage /></A>}/>
               <Route path="/system/audit" element={ <A><SystemAuditLogsPage /></A>}/>
-              {/* <Route path="/chat" element={ <A><ChatPage /></A>}/> */}
+              <Route path="/system/notifications" element={ <A><NotificationsPage /></A>}/>
 
               {/* 404 - Not Found */} 
               <Route path="*" element={<NotFound />} />

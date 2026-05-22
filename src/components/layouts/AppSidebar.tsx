@@ -5,6 +5,7 @@ import {
   BarChart3,
   LogOut,
   UserPlus,
+  Bell,
 } from "lucide-react";
 
 import { NavLink } from "../NavLink";
@@ -46,6 +47,7 @@ const sections: SidebarSection[] = [
     label: "System",
     items: [
       { title: "Audit Logs", url: "/system/audit", icon: ShieldAlert },
+      { title: "Notifications", url: "/system/notifications", icon: Bell },
     ],
   },
 ];

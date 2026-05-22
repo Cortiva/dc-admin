@@ -1,6 +1,7 @@
 import { Bell, CheckCircle, UserPlus, Calendar, Award, Star, Heart, AlertCircle, ChevronRight } from "lucide-react";
 import { Card } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
+import { useNavigate } from "react-router-dom";
 
 interface Notification {
     id: number;
@@ -142,6 +143,9 @@ const getTimeAgo = (timestamp: string) => {
 };
 
 export function Notifications() {
+
+    const navigate = useNavigate();
+    
     const unreadCount = mockNotifications.filter(n => !n.isRead).length;
 
     return (
@@ -207,7 +211,7 @@ export function Notifications() {
                             {/* Action Link */}
                             {notification.actionLink && (
                                 <div className="mt-2">
-                                    <button className="text-xs text-primary hover:underline inline-flex items-center gap-1">
+                                    <button className="text-xs text-primary hover:underline inline-flex items-center gap-1" onClick={() => navigate(notification.actionLink!)}>
                                         View details
                                         <ChevronRight className="w-3 h-3" />
                                     </button>
@@ -220,7 +224,7 @@ export function Notifications() {
 
             {/* View All Button */}
             <div className="mt-4 pt-4 border-t border-muted-card">
-                <button className="w-full text-center text-sm text-muted-foreground hover:text-primary transition-colors">
+                <button className="w-full text-center text-sm text-muted-foreground hover:text-primary transition-colors" onClick={() => navigate('/system/notifications')}>
                     View all notifications
                 </button>
             </div>
