@@ -15,7 +15,7 @@ import ResetPasswordPage from "./modules/auth/ResetPassword";
 import Dashboard from "./modules/dashboard/DashboardPage";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
 import NotFound from "./modules/NotFound";
-import SystemAuditLogsPage from "./modules/users/SystemAuditLogs";
+// import SystemAuditLogsPage from "./modules/users/SystemAuditLogs";
 import MembersPage from "./modules/members/MembersPage";
 import VisitorsPage from "./modules/members/VisitorsPage";
 import NotificationsPage from "./modules/notification/NotificationsPage";
@@ -48,7 +48,7 @@ function App() {
               <Route path="/dashboard" element={ <A><Dashboard /></A>}/>
               <Route path="/members" element={ <A><MembersPage /></A>}/>
               <Route path="/visitors" element={ <A><VisitorsPage /></A>}/>
-              <Route path="/system/audit" element={ <A><SystemAuditLogsPage /></A>}/>
+              {/* <Route path="/system/audit" element={ <A><SystemAuditLogsPage /></A>}/> */}
               <Route path="/system/notifications" element={ <A><NotificationsPage /></A>}/>
 
               {/* 404 - Not Found */} 

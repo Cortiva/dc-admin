@@ -1,7 +1,7 @@
 import {
   LayoutDashboard,
   Users,
-  ShieldAlert,
+  // ShieldAlert,
   BarChart3,
   LogOut,
   UserPlus,
@@ -46,7 +46,7 @@ const sections: SidebarSection[] = [
   {
     label: "System",
     items: [
-      { title: "Audit Logs", url: "/system/audit", icon: ShieldAlert },
+      // { title: "Audit Logs", url: "/system/audit", icon: ShieldAlert },
       { title: "Notifications", url: "/system/notifications", icon: Bell },
     ],
   },
