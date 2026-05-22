@@ -16,7 +16,6 @@ interface AuthState {
 // Helper function to safely decrypt cookie data
 const getDecryptedCookie = (key: string): string | null => {
     const cookie = Cookies.get(key);
-    // console.log(`Raw cookie ${key}:`, cookie);
 
     if (!cookie) {
         console.log(`No cookie found for ${key}`);
@@ -25,7 +24,6 @@ const getDecryptedCookie = (key: string): string | null => {
 
     try {
         const decrypted = decryptData(cookie);
-        // console.log(`Decrypted ${key}:`, decrypted);
         return typeof decrypted === "string"
             ? decrypted
             : JSON.stringify(decrypted);
@@ -38,7 +36,6 @@ const getDecryptedCookie = (key: string): string | null => {
 // Helper function to safely parse user data
 const getDecryptedUser = (): User | null => {
     const userCookie = Cookies.get("vUser");
-    // console.log("Raw user cookie:", userCookie);
 
     if (!userCookie) {
         console.log("No user cookie found");
@@ -47,7 +44,6 @@ const getDecryptedUser = (): User | null => {
 
     try {
         const decrypted = decryptData(userCookie);
-        // console.log("Decrypted user data (raw):", decrypted);
 
         let userData: User;
         if (typeof decrypted === "string") {
@@ -56,7 +52,6 @@ const getDecryptedUser = (): User | null => {
             userData = decrypted as User;
         }
 
-        // console.log("Parsed user data:", userData);
         return userData;
     } catch (error) {
         console.error("Failed to decrypt user cookie:", error);
@@ -91,14 +86,6 @@ interface SetCredentialsPayload {
 interface SetUserDataPayload {
     user: User;
 }
-
-// console.log("Raw cookies:", {
-//     vToken: Cookies.get("vToken"),
-//     vRefreshToken: Cookies.get("vRefreshToken"),
-//     vUser: Cookies.get("vUser"),
-//     vExpiresIn: Cookies.get("vExpiresIn"),
-//     vTokenType: Cookies.get("vTokenType"),
-// });
 
 const authSlice = createSlice({
     name: "auth",
@@ -145,7 +132,7 @@ const authSlice = createSlice({
                     const cookieOptions = {
                         secure: true,
                         sameSite: "strict" as const,
-                        expires: new Date(Date.now() + expiresIn * 1000), // expires in expiresIn seconds
+                        expires: new Date(Date.now() + expiresIn * 1000),
                     };
 
                     Cookies.set("vToken", encryptData(token), cookieOptions);
@@ -169,9 +156,6 @@ const authSlice = createSlice({
                         encryptData(tokenType),
                         cookieOptions,
                     );
-
-                    // // Still store full user in Redux state
-                    // state.user = user; // Keep full user in memory
                 } catch (error) {
                     console.error("Failed to set auth cookies:", error);
                 }
@@ -186,7 +170,7 @@ const authSlice = createSlice({
                     const cookieOptions = {
                         secure: true,
                         sameSite: "strict" as const,
-                        expires: 7, // expires in 7 days
+                        expires: 7,
                     };
                     Cookies.set(
                         "vUser",
@@ -208,12 +192,12 @@ const authSlice = createSlice({
             try {
                 Cookies.set("vToken", encryptData(action.payload.token), {
                     secure: true,
-                    sameSite: "strict",
+                    sameSite: "strict" as const,
                 });
                 Cookies.set(
                     "vExpiresIn",
                     encryptData(String(action.payload.expiresIn)),
-                    { secure: true, sameSite: "strict" },
+                    { secure: true, sameSite: "strict" as const },
                 );
             } catch (error) {
                 console.error("Failed to update access token cookie:", error);
@@ -258,15 +242,18 @@ export const {
     setHydrated,
 } = authSlice.actions;
 
-// Selectors
-export const selectCurrentAccessToken = (state: RootState) =>
+// Selectors - Fixed with proper typing (state is already typed as RootState)
+export const selectCurrentAccessToken = (state: RootState): string | null =>
     state.auth.accessToken;
-export const selectCurrentRefreshToken = (state: RootState) =>
+export const selectCurrentRefreshToken = (state: RootState): string | null =>
     state.auth.refreshToken;
-export const selectCurrentUser = (state: RootState) => state.auth.user;
-export const selectIsAuthenticated = (state: RootState) =>
+export const selectCurrentUser = (state: RootState): User | null =>
+    state.auth.user;
+export const selectIsAuthenticated = (state: RootState): boolean =>
     !!state.auth.accessToken;
-export const selectAuthTokenType = (state: RootState) => state.auth.tokenType;
-export const selectTokenExpiry = (state: RootState) => state.auth.expiresIn;
+export const selectAuthTokenType = (state: RootState): string | null =>
+    state.auth.tokenType;
+export const selectTokenExpiry = (state: RootState): number | null =>
+    state.auth.expiresIn;
 
 export default authSlice.reducer;
