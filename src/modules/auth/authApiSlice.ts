@@ -1,15 +1,19 @@
 import { apiSlice } from "../../store/apiSlice";
 
-// Define your request and response types
-interface CheckEmailRequest {
-    email: string;
-}
-
 interface RegisterRequest {
     email: string;
     password: string;
-    name?: string;
-    // add other registration fields as needed
+    firstName: string;
+    lastName: string;
+    role: "SUPER_ADMIN" | "ADMIN" | "USER";
+}
+
+interface SelfRegisterRequest {
+    email: string;
+    password: string;
+    confirmPassword: string;
+    firstName: string;
+    lastName: string;
 }
 
 interface LoginRequest {
@@ -19,10 +23,6 @@ interface LoginRequest {
 
 interface RefreshTokenRequest {
     refreshToken: string;
-}
-
-interface LogoutRequest {
-    refreshToken?: string;
 }
 
 interface ChangePasswordRequest {
@@ -35,12 +35,14 @@ interface ForgotPasswordRequest {
 }
 
 interface ResetPasswordRequest {
-    token: string;
+    resetToken: string;
     newPassword: string;
+    confirmPassword: string;
 }
 
 interface VerifyEmailRequest {
-    token: string;
+    email: string;
+    otp: string;
 }
 
 // Define response types (adjust based on your API)
@@ -49,10 +51,19 @@ interface AuthResponse {
         id: string;
         email: string;
         role: string;
-        // add other user fields
+        firstName: string;
+        lastName: string;
     };
     accessToken: string;
     refreshToken: string;
+    tokenType: string;
+    expiresIn: number;
+}
+
+interface AcceptInviteRequest {
+    token: string;
+    password: string;
+    confirmPassword: string;
 }
 
 interface MessageResponse {
@@ -61,13 +72,6 @@ interface MessageResponse {
 
 export const authApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
-        checkEmail: builder.mutation<MessageResponse, CheckEmailRequest>({
-            query: (data: CheckEmailRequest) => ({
-                url: `/auth/check-email`,
-                method: "POST",
-                body: data,
-            }),
-        }),
         register: builder.mutation<AuthResponse, RegisterRequest>({
             query: (data: RegisterRequest) => ({
                 url: `/auth/register`,
@@ -75,7 +79,14 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 body: data,
             }),
         }),
-        login: builder.mutation<AuthResponse, LoginRequest>({
+        selfRegister: builder.mutation<AuthResponse, SelfRegisterRequest>({
+            query: (data: SelfRegisterRequest) => ({
+                url: `/auth/self-register`,
+                method: "POST",
+                body: data,
+            }),
+        }),
+        login: builder.mutation({
             query: (data: LoginRequest) => ({
                 url: `/auth/login`,
                 method: "POST",
@@ -84,14 +95,14 @@ export const authApiSlice = apiSlice.injectEndpoints({
         }),
         refreshToken: builder.mutation<AuthResponse, RefreshTokenRequest>({
             query: (data: RefreshTokenRequest) => ({
-                url: `/auth/refresh-token`,
+                url: `/auth/refresh`,
                 method: "POST",
                 body: data,
             }),
         }),
-        logout: builder.mutation<MessageResponse, LogoutRequest>({
-            query: (data: LogoutRequest) => ({
-                url: `/auth/logout`,
+        acceptInvite: builder.mutation<MessageResponse, AcceptInviteRequest>({
+            query: (data: AcceptInviteRequest) => ({
+                url: `/auth/accept-invite`,
                 method: "POST",
                 body: data,
             }),
@@ -112,24 +123,21 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 body: data,
             }),
         }),
-        forgotPassword: builder.mutation<
-            MessageResponse,
-            ForgotPasswordRequest
-        >({
+        forgotPassword: builder.mutation({
             query: (data: ForgotPasswordRequest) => ({
                 url: `/auth/forgot-password`,
                 method: "POST",
                 body: data,
             }),
         }),
-        verifyEmail: builder.mutation<MessageResponse, VerifyEmailRequest>({
+        verifyEmail: builder.mutation({
             query: (data: VerifyEmailRequest) => ({
-                url: `/auth/verify-email`,
+                url: `/auth/verify-forgot-password`,
                 method: "POST",
                 body: data,
             }),
         }),
-        resetPassword: builder.mutation<MessageResponse, ResetPasswordRequest>({
+        resetPassword: builder.mutation({
             query: (data: ResetPasswordRequest) => ({
                 url: `/auth/reset-password`,
                 method: "POST",
@@ -140,11 +148,11 @@ export const authApiSlice = apiSlice.injectEndpoints({
 });
 
 export const {
-    useCheckEmailMutation,
+    useSelfRegisterMutation,
     useRegisterMutation,
     useLoginMutation,
     useRefreshTokenMutation,
-    useLogoutMutation,
+    useAcceptInviteMutation,
     useLogoutAllMutation,
     useChangePasswordMutation,
     useVerifyEmailMutation,

@@ -1,15 +1,14 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { apiSlice } from "./apiSlice";
+import { apiSlice as api } from "./apiSlice";
 import rootReducer from "./rootReducer";
-
-const nodeEnv = import.meta.env.NODE_ENV;
+import type { RootState } from "./rootReducer";
 
 export const store = configureStore({
     reducer: rootReducer,
     middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware().concat(apiSlice.middleware),
-    devTools: nodeEnv !== "production",
+        getDefaultMiddleware().concat(api.middleware),
+    devTools: import.meta.env.DEV,
 });
 
-export type RootState = ReturnType<typeof store.getState>;
+export type { RootState };
 export type AppDispatch = typeof store.dispatch;

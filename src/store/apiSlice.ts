@@ -1,37 +1,40 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import type {
-    FetchBaseQueryError,
-    BaseQueryFn,
+import {
+    createApi,
+    fetchBaseQuery,
+    type FetchBaseQueryError,
+    type BaseQueryFn,
 } from "@reduxjs/toolkit/query/react";
 import type { FetchArgs } from "@reduxjs/toolkit/query";
-import type { User } from "../types/user";
 import type { RootState } from "./store";
 import {
     logout,
     selectCurrentAccessToken,
     setCredentials,
 } from "../modules/auth/authSlice";
+import type { AuthUser } from "../types/auth.types";
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL;
-const apiKey = import.meta.env.VITE_API_KEY;
+const baseUrl = import.meta.env.VITE_API_BASE_URL as string;
 
 const baseQuery = fetchBaseQuery({
     baseUrl,
     prepareHeaders: (headers, { getState }) => {
-        const state = getState() as RootState;
-        const token = selectCurrentAccessToken(state);
-
+        const token = selectCurrentAccessToken(getState() as RootState);
         headers.set("Content-Type", "application/json");
         headers.set("Accept", "application/json");
-        headers.set("x-api-key", apiKey);
-
-        if (token) {
-            headers.set("Authorization", `Bearer ${token}`);
-        }
-
+        if (token) headers.set("Authorization", `Bearer ${token}`);
         return headers;
     },
 });
+
+interface RefreshResponse {
+    data: {
+        user: AuthUser;
+        token: string;
+        refreshToken: string;
+        expiresIn: number;
+        tokenType: string;
+    };
+}
 
 const baseQueryWithReAuth: BaseQueryFn<
     string | FetchArgs,
@@ -40,71 +43,47 @@ const baseQueryWithReAuth: BaseQueryFn<
 > = async (args, api, extraOptions) => {
     let result = await baseQuery(args, api, extraOptions);
 
-    // Check if error is 401 Unauthorized
     if (result.error?.status === 401) {
-        const state = api.getState() as RootState;
-        const refreshToken = state.auth?.refreshToken;
+        const refreshToken = (api.getState() as RootState).auth?.refreshToken;
 
         if (refreshToken) {
-            try {
-                // Send refresh token to get new access token
-                const refreshResult = await baseQuery(
-                    {
-                        url: "/auth/refresh-token",
-                        method: "POST",
-                        body: { refreshToken },
-                    },
-                    api,
-                    extraOptions,
-                );
+            const refreshResult = await baseQuery(
+                {
+                    url: "/auth/refresh",
+                    method: "POST",
+                    body: { refreshToken },
+                },
+                api,
+                extraOptions,
+            );
 
-                // Handle the nested response structure
-                if (refreshResult.data) {
-                    const responseData = refreshResult.data as {
-                        data: {
-                            user: User;
-                            token: string;
-                            refreshToken: string;
-                            expiresIn: number;
-                            tokenType: string;
-                        };
-                    };
+            if (refreshResult.data) {
+                const {
+                    user,
+                    token,
+                    refreshToken: newRefreshToken,
+                    expiresIn,
+                    tokenType,
+                } = (refreshResult.data as RefreshResponse).data;
 
-                    // Extract tokens from the nested data property
-                    const {
-                        user,
+                api.dispatch(
+                    setCredentials({
                         token,
                         refreshToken: newRefreshToken,
+                        user,
                         expiresIn,
                         tokenType,
-                    } = responseData.data;
-
-                    // Store the new tokens
-                    api.dispatch(
-                        setCredentials({
-                            token,
-                            refreshToken: newRefreshToken,
-                            user,
-                            expiresIn,
-                            tokenType,
-                        }),
-                    );
-
-                    // Retry the original query with new access token
-                    result = await baseQuery(args, api, extraOptions);
-                } else {
-                    // Refresh failed - log out
-                    api.dispatch(logout());
-                }
-            } catch (error) {
-                console.error("Refresh token error:", error);
+                    }),
+                );
+                result = await baseQuery(args, api, extraOptions);
+            } else {
                 api.dispatch(logout());
             }
         } else {
-            // No refresh token available - log out
             api.dispatch(logout());
         }
     }
+
     return result;
 };
 
@@ -112,5 +91,16 @@ export const apiSlice = createApi({
     reducerPath: "api",
     baseQuery: baseQueryWithReAuth,
     endpoints: () => ({}),
-    tagTypes: [], // Add any tag types you use for caching
+    tagTypes: [
+        "Users",
+        "Artisans",
+        "Bookings",
+        "Disputes",
+        "Payments",
+        "Verifications",
+        "Config",
+        "Analytics",
+        "Flags",
+        "AuditLog",
+    ],
 });
