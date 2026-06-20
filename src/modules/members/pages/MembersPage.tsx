@@ -10,19 +10,18 @@ import {
     UserX,
     Calendar,
 } from "lucide-react";
-import AppLayout from "../../components/layouts/AppLayout";
-import PageHeader from "../../components/PageHeader";
-import { Button } from "../../components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
-import StatCard from "../../components/StatCard";
-import { Skeleton } from "../../components/ui/skeleton";
-import type { Member, MemberFilterParams } from "../../types/member.type";
-import { membersData } from "../../mock/members";
-import MembersTable from "./components/MembersTable";
-import { ViewMember } from "./components/ViewMember";
-import MembersStatsSkeleton from "./components/MembersStatsSkeleton";
-import MembersTableSkeleton from "./components/MembersTableSkeleton";
-import CreateMember from "./components/CreateMember";
+import type { Member, MemberFilterParams } from "../../../types/member.type";
+import { membersData } from "../../../mock/members";
+import { Skeleton } from "../../../components/ui/skeleton";
+import MembersStatsSkeleton from "../components/MembersStatsSkeleton";
+import MembersTableSkeleton from "../components/MembersTableSkeleton";
+import PageHeader from "../../../components/PageHeader";
+import { Button } from "../../../components/ui/button";
+import StatCard from "../../../components/StatCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
+import MembersTable from "../components/MembersTable";
+import { ViewMember } from "../components/ViewMember";
+import CreateMember from "../components/CreateMember";
 
 export default function MembersPage() {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -178,164 +177,160 @@ export default function MembersPage() {
 
     if (isFetching) {
         return (
-            <AppLayout>
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                                <Skeleton className="h-8 w-8" />
-                                <Skeleton className="h-8 w-64" />
-                            </div>
-                            <Skeleton className="h-4 w-96" />
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                            <Skeleton className="h-8 w-8" />
+                            <Skeleton className="h-8 w-64" />
                         </div>
-                        <div className="flex items-center gap-3">
-                            <Skeleton className="h-10 w-10" />
-                            <Skeleton className="h-10 w-10" />
-                            <Skeleton className="h-10 w-32" />
-                        </div>
+                        <Skeleton className="h-4 w-96" />
                     </div>
-                    <MembersStatsSkeleton />
-                    <div className="space-y-4">
-                        <div className="flex gap-4">
-                            <Skeleton className="h-8 w-24" />
-                            <Skeleton className="h-8 w-32" />
-                        </div>
-                        <MembersTableSkeleton />
+                    <div className="flex items-center gap-3">
+                        <Skeleton className="h-10 w-10" />
+                        <Skeleton className="h-10 w-10" />
+                        <Skeleton className="h-10 w-32" />
                     </div>
                 </div>
-            </AppLayout>
+                <MembersStatsSkeleton />
+                <div className="space-y-4">
+                    <div className="flex gap-4">
+                        <Skeleton className="h-8 w-24" />
+                        <Skeleton className="h-8 w-32" />
+                    </div>
+                    <MembersTableSkeleton />
+                </div>
+            </div>
         );
     }
 
     return (
-        <AppLayout>
-            <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <PageHeader
-                        icon={<Users />}
-                        title="Church Members"
-                        subtitle="Manage church members, track attendance, and view member profiles"
-                    />
-                    <div className="flex items-center gap-3">
-                        <Button variant="outline" onClick={handleRefetch} disabled={isFetching}>
-                            <RefreshCw className={`w-5 h-5 ${isFetching ? 'animate-spin' : ''}`} />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={handleExport}
-                            className="flex items-center gap-2"
-                        >
-                            <Download className="w-5 h-5" />
-                            Export
-                        </Button>
-                        <Button onClick={() => setIsAddModalOpen(true)}>
-                            <Plus className="w-4 h-4" />
-                            Add Member
-                        </Button>
-                    </div>
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <PageHeader
+                    icon={<Users />}
+                    title="Church Members"
+                    subtitle="Manage church members, track attendance, and view member profiles"
+                />
+                <div className="flex items-center gap-3">
+                    <Button variant="outline" onClick={handleRefetch} disabled={isFetching}>
+                        <RefreshCw className={`w-5 h-5 ${isFetching ? 'animate-spin' : ''}`} />
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={handleExport}
+                        className="flex items-center gap-2"
+                    >
+                        <Download className="w-5 h-5" />
+                        Export
+                    </Button>
+                    <Button onClick={() => setIsAddModalOpen(true)}>
+                        <Plus className="w-4 h-4" />
+                        Add Member
+                    </Button>
                 </div>
+            </div>
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                    <StatCard
-                        title="Total Members"
-                        value={summary.totalMembers.toLocaleString()}
-                        icon={<Users className="w-5 h-5" />}
-                        color="blue"
-                        trend={{ value: `${summary.zones} zones represented`, positive: true }}
-                    />
-
-                    <StatCard
-                        title="Active Members"
-                        value={summary.activeMembers.toLocaleString()}
-                        icon={<UserCheck className="w-5 h-5" />}
-                        color="green"
-                        trend={{ value: `${activeRate}% active`, positive: true }}
-                    />
-
-                    <StatCard
-                        title="Completed DLI"
-                        value={summary.completedTraining.toLocaleString()}
-                        icon={<Calendar className="w-5 h-5" />}
-                        color="yellow"
-                        trend={{ value: `${trainingRate}% completed`, positive: true }}
-                    />
-
-                    <StatCard
-                        title="Married Members"
-                        value={summary.marriedMembers.toLocaleString()}
-                        icon={<UserX className="w-5 h-5" />}
-                        color="purple"
-                        trend={{ value: `${Math.round((summary.marriedMembers / summary.totalMembers) * 100)}%`, positive: true }}
-                    />
-                </div>
-
-                {/* Main Tabs */}
-                <Tabs defaultValue="members" className="space-y-6">
-                    <TabsList className="flex items-center mb-5">
-                        <TabsTrigger
-                            value="members"
-                            className="px-4 py-2.25 text-sm font-medium hover:text-foreground data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary transition-all"
-                        >
-                            All Members
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="training"
-                            className="px-4 py-2.25 text-sm font-medium hover:text-foreground data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary transition-all"
-                        >
-                            Training Progress
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="departments"
-                            className="px-4 py-2.25 text-sm font-medium hover:text-foreground data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary transition-all"
-                        >
-                            By Department
-                        </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="members">
-                        <MembersTable
-                            members={paginatedMembers}
-                            pagination={pagination}
-                            isFetching={isFetching}
-                            filters={filters}
-                            onSearch={handleSearch}
-                            onZoneFilter={handleZoneFilter}
-                            onDepartmentFilter={handleDepartmentFilter}
-                            onPageChange={handlePageChange}
-                            onLimitChange={handleLimitChange}
-                            onViewMember={handleViewMember}
-                            onSuccess={handleSuccess}
-                        />
-                    </TabsContent>
-
-                    <TabsContent value="training">
-                        {/* Training Progress Tab Content */}
-                        <TrainingProgressTab members={membersData} />
-                    </TabsContent>
-
-                    <TabsContent value="departments">
-                        {/* Departments Tab Content */}
-                        <DepartmentsTab members={membersData} />
-                    </TabsContent>
-                </Tabs>
-
-                <ViewMember
-                    isOpen={isDetailModalOpen}
-                    onClose={() => {
-                        setIsDetailModalOpen(false);
-                        setSelectedMember(null);
-                    }}
-                    member={selectedMember}
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <StatCard
+                    title="Total Members"
+                    value={summary.totalMembers.toLocaleString()}
+                    icon={<Users className="w-5 h-5" />}
+                    color="blue"
+                    trend={{ value: `${summary.zones} zones represented`, positive: true }}
                 />
 
-                <CreateMember
-                    isOpen={isAddModalOpen}
-                    onClose={() => setIsAddModalOpen(false)}
-                    onSuccess={handleSuccess}
+                <StatCard
+                    title="Active Members"
+                    value={summary.activeMembers.toLocaleString()}
+                    icon={<UserCheck className="w-5 h-5" />}
+                    color="green"
+                    trend={{ value: `${activeRate}% active`, positive: true }}
+                />
+
+                <StatCard
+                    title="Completed DLI"
+                    value={summary.completedTraining.toLocaleString()}
+                    icon={<Calendar className="w-5 h-5" />}
+                    color="yellow"
+                    trend={{ value: `${trainingRate}% completed`, positive: true }}
+                />
+
+                <StatCard
+                    title="Married Members"
+                    value={summary.marriedMembers.toLocaleString()}
+                    icon={<UserX className="w-5 h-5" />}
+                    color="purple"
+                    trend={{ value: `${Math.round((summary.marriedMembers / summary.totalMembers) * 100)}%`, positive: true }}
                 />
             </div>
-        </AppLayout>
+
+            {/* Main Tabs */}
+            <Tabs defaultValue="members" className="space-y-6">
+                <TabsList className="flex items-center mb-5">
+                    <TabsTrigger
+                        value="members"
+                        className="px-4 py-2.25 text-sm font-medium hover:text-foreground data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary transition-all"
+                    >
+                        All Members
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="training"
+                        className="px-4 py-2.25 text-sm font-medium hover:text-foreground data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary transition-all"
+                    >
+                        Training Progress
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="departments"
+                        className="px-4 py-2.25 text-sm font-medium hover:text-foreground data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary transition-all"
+                    >
+                        By Department
+                    </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="members">
+                    <MembersTable
+                        members={paginatedMembers}
+                        pagination={pagination}
+                        isFetching={isFetching}
+                        filters={filters}
+                        onSearch={handleSearch}
+                        onZoneFilter={handleZoneFilter}
+                        onDepartmentFilter={handleDepartmentFilter}
+                        onPageChange={handlePageChange}
+                        onLimitChange={handleLimitChange}
+                        onViewMember={handleViewMember}
+                        onSuccess={handleSuccess}
+                    />
+                </TabsContent>
+
+                <TabsContent value="training">
+                    {/* Training Progress Tab Content */}
+                    <TrainingProgressTab members={membersData} />
+                </TabsContent>
+
+                <TabsContent value="departments">
+                    {/* Departments Tab Content */}
+                    <DepartmentsTab members={membersData} />
+                </TabsContent>
+            </Tabs>
+
+            <ViewMember
+                isOpen={isDetailModalOpen}
+                onClose={() => {
+                    setIsDetailModalOpen(false);
+                    setSelectedMember(null);
+                }}
+                member={selectedMember}
+            />
+
+            <CreateMember
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onSuccess={handleSuccess}
+            />
+        </div>
     );
 }
 

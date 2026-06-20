@@ -6,25 +6,32 @@ import { Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "./provider/ThemeProvider";
 import { Toaster as Sonner } from "./components/ui/sonner";
 import ProtectedRoute from "./components/ProtectedRoute";
-import LoginPage from "./modules/auth/pages/LoginPage";
 import RedirectIfAuthenticated from "./components/RedirectIfAuthenticated";
-import AuthLayout from "./components/layouts/AuthLayout";
-import VerifyOtp from "./modules/auth/pages/VerifyOtp";
-import ForgotPassword from "./modules/auth/pages/ForgotPassword";
-import ResetPasswordPage from "./modules/auth/pages/ResetPassword";
-import Dashboard from "./modules/dashboard/DashboardPage";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
-import NotFound from "./modules/NotFound";
-// import SystemAuditLogsPage from "./modules/users/SystemAuditLogs";
-import MembersPage from "./modules/members/MembersPage";
-import VisitorsPage from "./modules/members/VisitorsPage";
-import NotificationsPage from "./modules/notification/NotificationsPage";
-// import ChatPage from "./modules/chat/ChatPage";
+import { lazy, Suspense } from "react";
+import AppLayout from "./components/layouts/AppLayout";
+import PageLoader from "./components/helper/PageLoader";
+import AuthLayout from "./components/layouts/AuthLayout";
+
+const LoginPage = lazy(() => import("./modules/auth/pages/LoginPage"));
+const ForgotPassword = lazy(() => import("./modules/auth/pages/ForgotPassword"));
+const VerifyOtp = lazy(() => import("./modules/auth/pages/VerifyOtp"));
+const ResetPasswordPage = lazy(() => import("./modules/auth/pages/ResetPassword"));
+const Dashboard = lazy(() => import("./modules/dashboard/pages/DashboardPage"));
+const MembersPage = lazy(() => import("./modules/members/pages/MembersPage"));
+const VisitorsPage = lazy(() => import("./modules/members/pages/VisitorsPage"));
+const NotificationsPage = lazy(() => import("./modules/notification/pages/NotificationsPage"));
+const Unauthorized = lazy(() => import("./modules/Unauthorized"));
+const NotFound = lazy(() => import("./modules/NotFound"));
 
 const queryClient = new QueryClient();
 
-const A = ({ children }: { children: React.ReactNode }) => (
-  <ProtectedRoute>{children}</ProtectedRoute>
+const S = ({ children }: { children: React.ReactNode }) => (
+    <Suspense fallback={<PageLoader />}>{children}</Suspense>
+);
+
+const P = ({ children }: { children: React.ReactNode }) => (
+    <ProtectedRoute><S>{children}</S></ProtectedRoute>
 );
 
 function App() {
@@ -32,24 +39,27 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-            <ToastContainer position="bottom-center" autoClose={5000} />
+            <ToastContainer position="bottom-center" autoClose={5000} className="bg-card text-foreground" />
             <Sonner />
             <Routes>
               {/* AUTH ROUTES (only accessible when NOT logged in) */}
               <Route element={<RedirectIfAuthenticated />}>
-                <Route path="login" element={ <AuthLayout><LoginPage /></AuthLayout>}/>
-                <Route path="forgot-password" element={ <AuthLayout><ForgotPassword /></AuthLayout>}/>
-                <Route path="verify-otp" element={ <AuthLayout><VerifyOtp /></AuthLayout>}/>
-                <Route path="reset-password" element={ <AuthLayout><ResetPasswordPage /></AuthLayout>}/>
+                <Route path="login" element={ <AuthLayout><S><LoginPage /></S></AuthLayout>}/>
+                <Route path="forgot-password" element={ <AuthLayout><S><ForgotPassword /></S></AuthLayout>}/>
+                <Route path="verify-otp" element={ <AuthLayout><S><VerifyOtp /></S></AuthLayout>}/>
+                <Route path="reset-password" element={ <AuthLayout><S><ResetPasswordPage /></S></AuthLayout>}/>
               </Route>
 
-              {/* PROTECTED ROUTES (only accessible when logged in) */}
-              <Route path="/" element={ <A><Dashboard /></A>}/>
-              <Route path="/dashboard" element={ <A><Dashboard /></A>}/>
-              <Route path="/members" element={ <A><MembersPage /></A>}/>
-              <Route path="/visitors" element={ <A><VisitorsPage /></A>}/>
-              {/* <Route path="/system/audit" element={ <A><SystemAuditLogsPage /></A>}/> */}
-              <Route path="/system/notifications" element={ <A><NotificationsPage /></A>}/>
+            {/* PROTECTED ROUTES (only accessible when logged in) */}
+            <Route element={<P><AppLayout /></P>}>
+              <Route path="/" element={ <S><Dashboard /></S>}/>
+              <Route path="/dashboard" element={ <S><Dashboard /></S>}/>
+              <Route path="/members" element={ <S><MembersPage /></S>}/>
+              <Route path="/visitors" element={ <S><VisitorsPage /></S>}/>
+              {/* <Route path="/system/audit" element={ <S><SystemAuditLogsPage /></S>}/> */}
+              <Route path="/system/notifications" element={<S><NotificationsPage /></S>} />
+              <Route path="/unauthorized"  element={<S><Unauthorized /></S>} />
+              </Route>
 
               {/* 404 - Not Found */} 
               <Route path="*" element={<NotFound />} />

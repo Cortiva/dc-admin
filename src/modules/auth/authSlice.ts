@@ -1,19 +1,30 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import Cookies from "js-cookie";
 import { encryptData, decryptData } from "../../utils/pCrypto";
-import type { User } from "../../types/user";
 import type { RootState } from "../../store/rootReducer";
+import type { AuthUser } from "../../types/auth.types";
 
 interface AuthState {
     accessToken: string | null;
     refreshToken: string | null;
-    user: User | null;
+    user: AuthUser | null;
     expiresIn: number | null;
     tokenType: string | null;
     isHydrated: boolean;
 }
 
-// Helper function to safely decrypt cookie data
+// Cookie keys centralized so storage and retrieval can never drift apart.
+const COOKIE_KEYS = {
+    accessToken: "dcToken",
+    refreshToken: "dcRefreshToken",
+    user: "dcUser",
+    expiresIn: "dcExpiresIn",
+    tokenType: "dcTokenType",
+} as const;
+
+const ALL_COOKIE_KEYS = Object.values(COOKIE_KEYS);
+
+// Reads + decrypts a cookie, returning the raw decrypted string (or null).
 const getDecryptedCookie = (key: string): string | null => {
     const cookie = Cookies.get(key);
 
@@ -24,67 +35,82 @@ const getDecryptedCookie = (key: string): string | null => {
 
     try {
         const decrypted = decryptData(cookie);
+        // decryptData's return type isn't guaranteed to be a string;
+        // normalize so callers always get a string or null.
         return typeof decrypted === "string"
             ? decrypted
             : JSON.stringify(decrypted);
     } catch (error) {
-        console.error(`Failed to decrypt cookie ${key}:`, error);
+        console.error(`Failed to decrypt cookie "${key}":`, error);
         return null;
     }
 };
 
-// Helper function to safely parse user data
-const getDecryptedUser = (): User | null => {
-    const userCookie = Cookies.get("vUser");
-
-    if (!userCookie) {
-        console.log("No user cookie found");
-        return null;
-    }
+// Reads + decrypts + parses the user cookie into an AuthUser.
+const getDecryptedUser = (): AuthUser | null => {
+    const raw = getDecryptedCookie(COOKIE_KEYS.user);
+    if (!raw) return null;
 
     try {
-        const decrypted = decryptData(userCookie);
-
-        let userData: User;
-        if (typeof decrypted === "string") {
-            userData = JSON.parse(decrypted) as User;
-        } else {
-            userData = decrypted as User;
-        }
-
-        return userData;
+        return JSON.parse(raw) as AuthUser;
     } catch (error) {
-        console.error("Failed to decrypt user cookie:", error);
+        console.error("Failed to parse user cookie:", error);
         return null;
     }
 };
 
-const storedToken = getDecryptedCookie("vToken");
-const storedRefreshToken = getDecryptedCookie("vRefreshToken");
-const storedExpiresIn = getDecryptedCookie("vExpiresIn");
-const storedTokenType = getDecryptedCookie("vTokenType");
+// Writes a cookie as ciphertext. Centralized so every write goes through
+// the same encrypt-then-set path and the same error handling.
+const setEncryptedCookie = (
+    key: string,
+    value: string,
+    options: Cookies.CookieAttributes,
+): void => {
+    try {
+        Cookies.set(key, encryptData(value), options);
+    } catch (error) {
+        console.error(`Failed to set cookie "${key}":`, error);
+    }
+};
+
+const buildCookieOptions = (expiresIn?: number): Cookies.CookieAttributes => ({
+    secure: true,
+    sameSite: "strict",
+    // Falls back to a 7-day session cookie when no explicit TTL is given,
+    // instead of silently defaulting to a same-session-only cookie.
+    expires: expiresIn ? new Date(Date.now() + expiresIn * 1000) : 7,
+});
+
+const storedToken = getDecryptedCookie(COOKIE_KEYS.accessToken);
+const storedRefreshToken = getDecryptedCookie(COOKIE_KEYS.refreshToken);
+const storedExpiresIn = getDecryptedCookie(COOKIE_KEYS.expiresIn);
+const storedTokenType = getDecryptedCookie(COOKIE_KEYS.tokenType);
 const storedUser = getDecryptedUser();
 
 const initialState: AuthState = {
-    accessToken: storedToken || null,
-    refreshToken: storedRefreshToken || null,
-    user: storedUser || null,
+    accessToken: storedToken,
+    refreshToken: storedRefreshToken,
+    user: storedUser,
     expiresIn: storedExpiresIn ? Number(storedExpiresIn) : null,
-    tokenType: storedTokenType || null,
+    tokenType: storedTokenType,
     isHydrated: true,
 };
 
-// Payload types
 interface SetCredentialsPayload {
     token: string;
     refreshToken: string;
-    user: User;
+    user: AuthUser;
     expiresIn: number;
     tokenType: string;
 }
 
 interface SetUserDataPayload {
-    user: User;
+    user: AuthUser;
+}
+
+interface UpdateAccessTokenPayload {
+    token: string;
+    expiresIn: number;
 }
 
 const authSlice = createSlice({
@@ -104,104 +130,71 @@ const authSlice = createSlice({
             state.expiresIn = expiresIn;
             state.tokenType = tokenType;
 
-            // Only set cookies if token exists
-            if (token) {
-                try {
-                    // Create minimal user object for cookie storage
-                    const minimalUser = {
-                        id: user.id,
-                        email: user.email,
-                        firstName: user.firstName,
-                        lastName: user.lastName,
-                        middleName: user.middleName,
-                        phone: user.phone,
-                        alternativePhone: user.alternativePhone,
-                        gender: user.gender,
-                        dateOfBirth: user.dateOfBirth,
-                        role: user.role,
-                        emailVerified: user.emailVerified,
-                        requiresPasswordChange: user.requiresPasswordChange,
-                    };
+            if (!token) return;
 
-                    console.log(
-                        "Minimal user size:",
-                        JSON.stringify(minimalUser).length,
-                        "bytes",
-                    );
+            const cookieOptions = buildCookieOptions(expiresIn);
 
-                    const cookieOptions = {
-                        secure: true,
-                        sameSite: "strict" as const,
-                        expires: new Date(Date.now() + expiresIn * 1000),
-                    };
-
-                    Cookies.set("vToken", encryptData(token), cookieOptions);
-                    Cookies.set(
-                        "vRefreshToken",
-                        encryptData(refreshToken),
-                        cookieOptions,
-                    );
-                    Cookies.set(
-                        "vUser",
-                        encryptData(JSON.stringify(minimalUser)),
-                        cookieOptions,
-                    );
-                    Cookies.set(
-                        "vExpiresIn",
-                        encryptData(String(expiresIn)),
-                        cookieOptions,
-                    );
-                    Cookies.set(
-                        "vTokenType",
-                        encryptData(tokenType),
-                        cookieOptions,
-                    );
-                } catch (error) {
-                    console.error("Failed to set auth cookies:", error);
-                }
-            }
+            setEncryptedCookie(COOKIE_KEYS.accessToken, token, cookieOptions);
+            setEncryptedCookie(
+                COOKIE_KEYS.refreshToken,
+                refreshToken,
+                cookieOptions,
+            );
+            // Store the FULL user object — not a stripped-down copy — so
+            // that selectCurrentUser() returns the same shape both right
+            // after login and after a page refresh. Storing a "minimal"
+            // user here previously meant fields like `id` vanished on
+            // rehydration even though they were present in Redux state
+            // immediately after login.
+            setEncryptedCookie(
+                COOKIE_KEYS.user,
+                JSON.stringify(user),
+                cookieOptions,
+            );
+            setEncryptedCookie(
+                COOKIE_KEYS.expiresIn,
+                String(expiresIn),
+                cookieOptions,
+            );
+            setEncryptedCookie(COOKIE_KEYS.tokenType, tokenType, cookieOptions);
         },
 
         setUserData: (state, action: PayloadAction<SetUserDataPayload>) => {
             const { user } = action.payload;
-            if (user) {
-                state.user = user;
-                try {
-                    const cookieOptions = {
-                        secure: true,
-                        sameSite: "strict" as const,
-                        expires: 7,
-                    };
-                    Cookies.set(
-                        "vUser",
-                        encryptData(JSON.stringify(user)),
-                        cookieOptions,
-                    );
-                } catch (error) {
-                    console.error("Failed to update user cookie:", error);
-                }
-            }
+            if (!user) return;
+
+            state.user = user;
+            // No expiresIn available here, so this reuses the existing
+            // token expiry if we have one, otherwise falls back to 7 days.
+            const cookieOptions = buildCookieOptions(
+                state.expiresIn ?? undefined,
+            );
+            setEncryptedCookie(
+                COOKIE_KEYS.user,
+                JSON.stringify(user),
+                cookieOptions,
+            );
         },
 
         updateAccessToken: (
             state,
-            action: PayloadAction<{ token: string; expiresIn: number }>,
+            action: PayloadAction<UpdateAccessTokenPayload>,
         ) => {
-            state.accessToken = action.payload.token;
-            state.expiresIn = action.payload.expiresIn;
-            try {
-                Cookies.set("vToken", encryptData(action.payload.token), {
-                    secure: true,
-                    sameSite: "strict" as const,
-                });
-                Cookies.set(
-                    "vExpiresIn",
-                    encryptData(String(action.payload.expiresIn)),
-                    { secure: true, sameSite: "strict" as const },
-                );
-            } catch (error) {
-                console.error("Failed to update access token cookie:", error);
-            }
+            const { token, expiresIn } = action.payload;
+            state.accessToken = token;
+            state.expiresIn = expiresIn;
+
+            // Previously this set the cookie with no `expires` option,
+            // which makes js-cookie default to a session-only cookie —
+            // silently shortening the persisted session on every token
+            // refresh. Now it carries the new TTL forward explicitly.
+            const cookieOptions = buildCookieOptions(expiresIn);
+            setEncryptedCookie(COOKIE_KEYS.accessToken, token, cookieOptions);
+            setEncryptedCookie(
+                COOKIE_KEYS.expiresIn,
+                String(expiresIn),
+                cookieOptions,
+            );
         },
 
         logout: (state) => {
@@ -211,19 +204,10 @@ const authSlice = createSlice({
             state.expiresIn = null;
             state.tokenType = null;
 
-            // Clear all auth cookies
-            const cookiesToRemove = [
-                "vToken",
-                "vRefreshToken",
-                "vUser",
-                "vExpiresIn",
-                "vTokenType",
-            ];
-            cookiesToRemove.forEach((cookie) => {
+            ALL_COOKIE_KEYS.forEach((cookie) => {
                 Cookies.remove(cookie, { path: "/" });
             });
 
-            // Clear any other auth-related storage
             localStorage.removeItem("tempEmail");
             sessionStorage.clear();
         },
@@ -242,12 +226,11 @@ export const {
     setHydrated,
 } = authSlice.actions;
 
-// Selectors - Fixed with proper typing (state is already typed as RootState)
 export const selectCurrentAccessToken = (state: RootState): string | null =>
     state.auth.accessToken;
 export const selectCurrentRefreshToken = (state: RootState): string | null =>
     state.auth.refreshToken;
-export const selectCurrentUser = (state: RootState): User | null =>
+export const selectCurrentUser = (state: RootState): AuthUser | null =>
     state.auth.user;
 export const selectIsAuthenticated = (state: RootState): boolean =>
     !!state.auth.accessToken;
@@ -255,5 +238,7 @@ export const selectAuthTokenType = (state: RootState): string | null =>
     state.auth.tokenType;
 export const selectTokenExpiry = (state: RootState): number | null =>
     state.auth.expiresIn;
+export const selectIsHydrated = (state: RootState): boolean =>
+    state.auth.isHydrated;
 
 export default authSlice.reducer;

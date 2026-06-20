@@ -10,18 +10,17 @@ import {
     TrendingUp,
     Calendar,
 } from "lucide-react";
-import AppLayout from "../../components/layouts/AppLayout";
-import PageHeader from "../../components/PageHeader";
-import { Button } from "../../components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
-import StatCard from "../../components/StatCard";
-import { Skeleton } from "../../components/ui/skeleton";
-import { visitorsData, type Visitor, type VisitorFilterParams } from "../../mock/visitors-mock-data";
-import VisitorsStatsSkeleton from "./components/VisitorsStatsSkeleton";
-import VisitorsTableSkeleton from "./components/VisitorsTableSkeleton";
-import VisitorsTable from "./components/VisitorsTable";
-import { ViewVisitor } from "./components/ViewVisitor";
-import CreateVisitor from "./components/CreateVisitor";
+import { visitorsData, type Visitor, type VisitorFilterParams } from "../../../mock/visitors-mock-data";
+import { Skeleton } from "../../../components/ui/skeleton";
+import VisitorsStatsSkeleton from "../components/VisitorsStatsSkeleton";
+import VisitorsTableSkeleton from "../components/VisitorsTableSkeleton";
+import PageHeader from "../../../components/PageHeader";
+import { Button } from "../../../components/ui/button";
+import StatCard from "../../../components/StatCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
+import VisitorsTable from "../components/VisitorsTable";
+import { ViewVisitor } from "../components/ViewVisitor";
+import CreateVisitor from "../components/CreateVisitor";
 
 export default function VisitorsPage() {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -208,7 +207,6 @@ export default function VisitorsPage() {
 
     if (isFetching) {
         return (
-            <AppLayout>
                 <div className="space-y-6">
                     <div className="flex items-center justify-between">
                         <div className="space-y-2">
@@ -233,12 +231,10 @@ export default function VisitorsPage() {
                         <VisitorsTableSkeleton />
                     </div>
                 </div>
-            </AppLayout>
         );
     }
 
     return (
-        <AppLayout>
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <PageHeader
@@ -431,6 +427,5 @@ export default function VisitorsPage() {
                     onSuccess={handleSuccess}
                 />
             </div>
-        </AppLayout>
     );
 }

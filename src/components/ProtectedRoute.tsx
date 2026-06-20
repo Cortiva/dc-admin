@@ -23,9 +23,7 @@ export default function ProtectedRoute ({ children }: ProtectedRouteProps) {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // console.log("ProtectedRoute: User is authenticated, checking roles...", {user});
-
-    if ((user?.role !== "super_admin" && user?.role !== "admin")) {
+    if ((user?.role !== "SUPER_ADMIN" && user?.role !== "ADMIN" && user?.role !== "MANAGER")) {
         return <Navigate to="/unauthorized" replace />;
     }
 

@@ -19,25 +19,25 @@ export default function KPICard({ title, subtitle, value, change, icon, color }:
     };
 
     const isPositive = change > 0;
-    
+
     return (
-        <Card className="bg-card rounded-xl shadow-sm border border-muted-card p-3">
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex flex-row space-x-3 justify-center items-center">
-                    <div className={`w-12 h-12 rounded-lg ${colorClasses[color]} flex items-center justify-center`}>
+        <Card className="bg-card rounded-xl shadow-sm border border-muted-card p-4 sm:p-3">
+            <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+                <div className="flex flex-row gap-3 items-center min-w-0">
+                    <div className={`w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-lg ${colorClasses[color]} flex items-center justify-center`}>
                         {icon}
                     </div>
-                    <div className="flex flex-col">
-                        <h3 className="text-[16px] font-medium">{title}</h3>
-                        <p className="text-[13px] text-muted-foreground">{subtitle}</p>
+                    <div className="flex flex-col min-w-0">
+                        <h3 className="text-sm sm:text-[16px] font-medium truncate">{title}</h3>
+                        <p className="text-xs sm:text-[13px] text-muted-foreground truncate">{subtitle}</p>
                     </div>
                 </div>
-                <div className={`flex items-center gap-1 text-[13px] ${isPositive ? "text-green-600" : "text-red-600"}`}>
-                    {isPositive ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                <div className={`flex items-center gap-1 text-xs sm:text-[13px] shrink-0 ${isPositive ? "text-green-600" : "text-red-600"}`}>
+                    {isPositive ? <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" /> : <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5" />}
                     <span className="font-medium">{Math.abs(change)}%</span>
                 </div>
             </div>
-            <h3 className="text-5xl font-bold">{value}</h3>
+            <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold truncate">{value}</h3>
         </Card>
     );
 }

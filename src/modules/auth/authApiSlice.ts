@@ -1,4 +1,5 @@
 import { apiSlice } from "../../store/apiSlice";
+import type { AuthUser } from "../../types/auth.types";
 
 interface RegisterRequest {
     email: string;
@@ -45,21 +46,6 @@ interface VerifyEmailRequest {
     otp: string;
 }
 
-// Define response types (adjust based on your API)
-interface AuthResponse {
-    user: {
-        id: string;
-        email: string;
-        role: string;
-        firstName: string;
-        lastName: string;
-    };
-    accessToken: string;
-    refreshToken: string;
-    tokenType: string;
-    expiresIn: number;
-}
-
 interface AcceptInviteRequest {
     token: string;
     password: string;
@@ -70,38 +56,57 @@ interface MessageResponse {
     message: string;
 }
 
+// The actual payload the backend sends back for auth endpoints.
+interface AuthPayload {
+    user: AuthUser;
+    accessToken: string;
+    refreshToken: string;
+    tokenType: string;
+    expiresIn: number;
+}
+
+// The backend wraps every payload in a `data` envelope — LoginPage.tsx
+// destructures `result.data`, so the response type needs to reflect that
+// wrapper instead of putting the fields at the top level. Previously
+// AuthResponse had no `data` field at all, which meant `result.data` in
+// LoginPage only worked by accident (because `login` had no generics, so
+// nothing was type-checked).
+interface AuthResponse {
+    data: AuthPayload;
+}
+
 export const authApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         register: builder.mutation<AuthResponse, RegisterRequest>({
-            query: (data: RegisterRequest) => ({
+            query: (data) => ({
                 url: `/auth/register`,
                 method: "POST",
                 body: data,
             }),
         }),
         selfRegister: builder.mutation<AuthResponse, SelfRegisterRequest>({
-            query: (data: SelfRegisterRequest) => ({
+            query: (data) => ({
                 url: `/auth/self-register`,
                 method: "POST",
                 body: data,
             }),
         }),
-        login: builder.mutation({
-            query: (data: LoginRequest) => ({
+        login: builder.mutation<AuthResponse, LoginRequest>({
+            query: (data) => ({
                 url: `/auth/login`,
                 method: "POST",
                 body: data,
             }),
         }),
         refreshToken: builder.mutation<AuthResponse, RefreshTokenRequest>({
-            query: (data: RefreshTokenRequest) => ({
+            query: (data) => ({
                 url: `/auth/refresh`,
                 method: "POST",
                 body: data,
             }),
         }),
         acceptInvite: builder.mutation<MessageResponse, AcceptInviteRequest>({
-            query: (data: AcceptInviteRequest) => ({
+            query: (data) => ({
                 url: `/auth/accept-invite`,
                 method: "POST",
                 body: data,
@@ -117,28 +122,31 @@ export const authApiSlice = apiSlice.injectEndpoints({
             MessageResponse,
             ChangePasswordRequest
         >({
-            query: (data: ChangePasswordRequest) => ({
+            query: (data) => ({
                 url: `/auth/change-password`,
                 method: "PUT",
                 body: data,
             }),
         }),
-        forgotPassword: builder.mutation({
-            query: (data: ForgotPasswordRequest) => ({
+        forgotPassword: builder.mutation<
+            MessageResponse,
+            ForgotPasswordRequest
+        >({
+            query: (data) => ({
                 url: `/auth/forgot-password`,
                 method: "POST",
                 body: data,
             }),
         }),
-        verifyEmail: builder.mutation({
-            query: (data: VerifyEmailRequest) => ({
+        verifyEmail: builder.mutation<MessageResponse, VerifyEmailRequest>({
+            query: (data) => ({
                 url: `/auth/verify-forgot-password`,
                 method: "POST",
                 body: data,
             }),
         }),
-        resetPassword: builder.mutation({
-            query: (data: ResetPasswordRequest) => ({
+        resetPassword: builder.mutation<MessageResponse, ResetPasswordRequest>({
+            query: (data) => ({
                 url: `/auth/reset-password`,
                 method: "POST",
                 body: data,
