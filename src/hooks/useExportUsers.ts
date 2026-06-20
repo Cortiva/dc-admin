@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { toast } from "react-toastify";
-import { adminApiSlice } from "../modules/users/userApiSlice";
+import { adminApiSlice } from "../modules/members/userApiSlice";
 
 export const useExportUsers = () => {
     const [exportMutation, { isLoading }] =

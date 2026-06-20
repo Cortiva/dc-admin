@@ -20,6 +20,8 @@ const ResetPasswordPage = lazy(() => import("./modules/auth/pages/ResetPassword"
 const Dashboard = lazy(() => import("./modules/dashboard/pages/DashboardPage"));
 const MembersPage = lazy(() => import("./modules/members/pages/MembersPage"));
 const VisitorsPage = lazy(() => import("./modules/members/pages/VisitorsPage"));
+const UsersPage = lazy(() => import("./modules/users/pages/UsersPage"));
+const AcceptInvitePage = lazy(() => import("./modules/users/pages/AcceptInvitePage"));
 const NotificationsPage = lazy(() => import("./modules/notification/pages/NotificationsPage"));
 const Unauthorized = lazy(() => import("./modules/Unauthorized"));
 const NotFound = lazy(() => import("./modules/NotFound"));
@@ -50,12 +52,15 @@ function App() {
                 <Route path="reset-password" element={ <AuthLayout><S><ResetPasswordPage /></S></AuthLayout>}/>
               </Route>
 
+              <Route path="accept-invite" element={ <AuthLayout><S><AcceptInvitePage /></S></AuthLayout>}/>
+
             {/* PROTECTED ROUTES (only accessible when logged in) */}
             <Route element={<P><AppLayout /></P>}>
               <Route path="/" element={ <S><Dashboard /></S>}/>
               <Route path="/dashboard" element={ <S><Dashboard /></S>}/>
               <Route path="/members" element={ <S><MembersPage /></S>}/>
               <Route path="/visitors" element={ <S><VisitorsPage /></S>}/>
+              <Route path="/users" element={ <S><UsersPage /></S>}/>
               {/* <Route path="/system/audit" element={ <S><SystemAuditLogsPage /></S>}/> */}
               <Route path="/system/notifications" element={<S><NotificationsPage /></S>} />
               <Route path="/unauthorized"  element={<S><Unauthorized /></S>} />

@@ -31,7 +31,7 @@ const buildSections = (): NavSection[] => [
     {
         label: "User Management",
         items: [
-          { title: "All Members", url: "/members", icon: Users },
+          { title: "Users", url: "/users", icon: Users },
           { title: "Visitors", url: "/visitors", icon: UserPlus },
         ],
     },
