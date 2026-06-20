@@ -1,8 +1,9 @@
 import {
-    LayoutDashboard, Users, BarChart3,
+    LayoutDashboard, Users,
+    // BarChart3,
     LogOut, ChevronDown, ChevronRight,
     UserPlus,
-    Bell,
+    // Bell,
     MapPin,
 } from "lucide-react";
 import { useState } from "react";
@@ -42,20 +43,20 @@ const buildSections = (): NavSection[] => [
             { title: "Visitors", url: "/visitors", icon: UserPlus },
         ],
     },
-    {
-        label: "Analytics",
-        items: [
-            { title: "Reports & Insights", url: "/analytics", icon: BarChart3 },
-        ],
-    },
+    // {
+    //     label: "Analytics",
+    //     items: [
+    //         { title: "Reports & Insights", url: "/analytics", icon: BarChart3 },
+    //     ],
+    // },
 
-    {
-        label: "System",
-        items: [
-            // { title: "Audit Logs", url: "/system/audit", icon: ShieldAlert },
-            { title: "Notifications", url: "/system/notifications", icon: Bell },
-        ],
-    },
+    // {
+    //     label: "System",
+    //     items: [
+    //         // { title: "Audit Logs", url: "/system/audit", icon: ShieldAlert },
+    //         { title: "Notifications", url: "/system/notifications", icon: Bell },
+    //     ],
+    // },
 ];
 
 export default function AppSidebar({
@@ -147,7 +148,7 @@ export default function AppSidebar({
                     title={collapsed && depth === 0 ? item.title : undefined}
                     className={`
                         relative flex items-center gap-3 px-3 py-2 rounded-sm w-full
-                        transition-all duration-200 group
+                        transition-all duration-200 group cursor-pointer
                         ${depth > 0 ? "pl-7" : ""}
                         ${active
                             ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
