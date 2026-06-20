@@ -23,6 +23,9 @@ const AcceptInvitePage = lazy(() => import("./modules/users/pages/AcceptInvitePa
 const NotificationsPage = lazy(() => import("./modules/notification/pages/NotificationsPage"));
 const Unauthorized = lazy(() => import("./modules/Unauthorized"));
 const NotFound = lazy(() => import("./modules/NotFound"));
+const AreasPage = lazy(() => import("./modules/structure/pages/AreasPage"));
+const AreaDetailPage = lazy(() => import("./modules/structure/pages/AreaDetailPage"));
+const ZoneDetailPage = lazy(() => import("./modules/structure/pages/ZoneDetailPage"));
 
 const queryClient = new QueryClient();
 
@@ -56,7 +59,10 @@ function App() {
             <Route element={<P><AppLayout /></P>}>
               <Route path="/" element={ <S><Dashboard /></S>}/>
               <Route path="/dashboard" element={ <S><Dashboard /></S>}/>
-              <Route path="/users" element={ <S><UsersPage /></S>}/>
+              <Route path="/users" element={<S><UsersPage /></S>} />
+              <Route path="/structure" element={ <S><AreasPage /></S>}/>
+              <Route path="/structure/areas/:areaId" element={ <S><AreaDetailPage /></S>}/>
+              <Route path="/structure/zones/:zoneId" element={ <S><ZoneDetailPage /></S>}/>
               {/* <Route path="/system/audit" element={ <S><SystemAuditLogsPage /></S>}/> */}
               <Route path="/system/notifications" element={<S><NotificationsPage /></S>} />
               <Route path="/unauthorized"  element={<S><Unauthorized /></S>} />

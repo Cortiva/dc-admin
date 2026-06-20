@@ -3,6 +3,7 @@ import {
     LogOut, ChevronDown, ChevronRight,
     UserPlus,
     Bell,
+    MapPin,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -29,26 +30,32 @@ const buildSections = (): NavSection[] => [
         items: [{ title: "Dashboard", url: "/dashboard", icon: LayoutDashboard }],
     },
     {
-        label: "User Management",
+        label: "Church Structure",
         items: [
-          { title: "Users", url: "/users", icon: Users },
-          { title: "Visitors", url: "/visitors", icon: UserPlus },
+            { title: "Areas, Zones & Cells", url: "/structure", icon: MapPin },
         ],
     },
     {
-    label: "Analytics",
-    items: [
-      { title: "Reports & Insights", url: "/analytics", icon: BarChart3 },
-    ],
-  },
+        label: "User Management",
+        items: [
+            { title: "Users", url: "/users", icon: Users },
+            { title: "Visitors", url: "/visitors", icon: UserPlus },
+        ],
+    },
+    {
+        label: "Analytics",
+        items: [
+            { title: "Reports & Insights", url: "/analytics", icon: BarChart3 },
+        ],
+    },
 
-  {
-    label: "System",
-    items: [
-      // { title: "Audit Logs", url: "/system/audit", icon: ShieldAlert },
-      { title: "Notifications", url: "/system/notifications", icon: Bell },
-    ],
-  },
+    {
+        label: "System",
+        items: [
+            // { title: "Audit Logs", url: "/system/audit", icon: ShieldAlert },
+            { title: "Notifications", url: "/system/notifications", icon: Bell },
+        ],
+    },
 ];
 
 export default function AppSidebar({
