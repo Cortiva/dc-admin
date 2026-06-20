@@ -1,5 +1,6 @@
 import type { UserRole } from "../../users/types/user.types";
 
+// Minimal leader reference, as returned embedded in Area/Zone/Cell objects.
 export interface LeaderRef {
     id: string;
     firstName: string;

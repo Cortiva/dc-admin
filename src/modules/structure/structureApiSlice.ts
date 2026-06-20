@@ -2,18 +2,18 @@ import { apiSlice } from "../../store/apiSlice";
 import type { ApiResponse, SpringPage } from "../../types/api";
 import type {
     Area,
-    AreaDetail,
+    Zone,
     Cell,
+    AreaDetail,
+    ZoneDetail,
     CreateAreaRequest,
-    CreateCellRequest,
-    CreateZoneRequest,
-    StructureFilterParams,
     UpdateAreaRequest,
+    CreateZoneRequest,
+    UpdateZoneRequest,
+    CreateCellRequest,
     UpdateCellRequest,
     UpdateLeaderRequest,
-    UpdateZoneRequest,
-    Zone,
-    ZoneDetail,
+    StructureFilterParams,
 } from "./types/structure.types";
 
 const toQueryParams = (filters: StructureFilterParams) => ({

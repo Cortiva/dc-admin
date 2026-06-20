@@ -1,43 +1,47 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { MapPin, RefreshCw, Plus, Search } from "lucide-react";
+import { MapPin, RefreshCw, Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import PageHeader from "../../../components/PageHeader";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Skeleton } from "../../../components/ui/skeleton";
-import { areasData, zonesData } from "../../../mock/structure";
 import { AreaCard } from "../components/AreaCard";
 import { CreateAreaDialog } from "../components/CreateAreaDialog";
+import { handleApiError } from "../../../utils/functions";
+import type { StructureFilterParams } from "../types/structure.types";
+import { useFetchAreasQuery, useFetchZonesQuery } from "../structureApiSlice";
+
+const ALL_ZONES_LIMIT = 500;
 
 export default function AreasPage() {
-    const [search, setSearch] = useState("");
+    const [searchInput, setSearchInput] = useState("");
     const [isCreateOpen, setIsCreateOpen] = useState(false);
-    const [isFetching, setIsFetching] = useState(false);
+    const [filters, setFilters] = useState<StructureFilterParams>({
+        page: 1,
+        limit: 12,
+        search: "",
+    });
 
-    const handleRefetch = async () => {
-        setIsFetching(true);
-        await new Promise((r) => setTimeout(r, 400));
-        setIsFetching(false);
-    };
+    const { data, isFetching, isError, error, refetch } = useFetchAreasQuery(filters);
+    if (isError) handleApiError(error);
 
+    const areas = data?.data.content ?? [];
+    const totalPages = data?.data.totalPages ?? 0;
+
+    const { data: zonesResponse } = useFetchZonesQuery({ page: 1, limit: ALL_ZONES_LIMIT });
     const zoneCountByArea = useMemo(() => {
         const counts: Record<string, number> = {};
-        zonesData.forEach((z) => {
-            counts[z.areaId] = (counts[z.areaId] ?? 0) + 1;
+        (zonesResponse?.data.content ?? []).forEach((zone) => {
+            counts[zone.areaId] = (counts[zone.areaId] ?? 0) + 1;
         });
         return counts;
-    }, []);
+    }, [zonesResponse]);
 
-    const filteredAreas = useMemo(() => {
-        if (!search) return areasData;
-        const lower = search.toLowerCase();
-        return areasData.filter(
-            (a) =>
-                a.name.toLowerCase().includes(lower) ||
-                a.description.toLowerCase().includes(lower),
-        );
-    }, [search]);
+    const handleSearch = () => setFilters((p) => ({ ...p, search: searchInput, page: 1 }));
+    const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") handleSearch();
+    };
 
     return (
         <div className="space-y-6">
@@ -48,7 +52,7 @@ export default function AreasPage() {
                     subtitle="Browse areas, zones, and cells, and manage their leaders"
                 />
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" onClick={handleRefetch} disabled={isFetching}>
+                    <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
                         <RefreshCw className={`w-5 h-5 ${isFetching ? "animate-spin" : ""}`} />
                     </Button>
                     <Button onClick={() => setIsCreateOpen(true)}>
@@ -58,14 +62,20 @@ export default function AreasPage() {
                 </div>
             </div>
 
-            <div className="relative max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search areas..."
-                    className="pl-9"
-                />
+            <div className="flex items-center gap-2 max-w-sm">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        onKeyDown={handleSearchKeyDown}
+                        placeholder="Search areas..."
+                        className="pl-9"
+                    />
+                </div>
+                <Button onClick={handleSearch} size="sm">
+                    <Search className="w-4 h-4" />
+                </Button>
             </div>
 
             {isFetching ? (
@@ -74,7 +84,7 @@ export default function AreasPage() {
                         <Skeleton key={i} className="h-36 rounded-xl" />
                     ))}
                 </div>
-            ) : filteredAreas.length === 0 ? (
+            ) : areas.length === 0 ? (
                 <div className="text-center py-16 space-y-1">
                     <p className="font-medium">No areas found</p>
                     <p className="text-sm text-muted-foreground">
@@ -83,9 +93,41 @@ export default function AreasPage() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {filteredAreas.map((area) => (
-                        <AreaCard key={area.id} area={area} zoneCount={zoneCountByArea[area.id] ?? 0} />
+                    {areas.map((area) => (
+                        <AreaCard
+                            key={area.id}
+                            area={area}
+                            zoneCount={zoneCountByArea[area.id] ?? 0}
+                        />
                     ))}
+                </div>
+            )}
+
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground">
+                        Page {filters.page} of {totalPages}
+                    </div>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFilters((p) => ({ ...p, page: p.page - 1 }))}
+                            disabled={filters.page === 1}
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                            Previous
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFilters((p) => ({ ...p, page: p.page + 1 }))}
+                            disabled={filters.page === totalPages}
+                        >
+                            Next
+                            <ChevronRight className="w-4 h-4" />
+                        </Button>
+                    </div>
                 </div>
             )}
 
@@ -94,7 +136,7 @@ export default function AreasPage() {
                 onClose={() => setIsCreateOpen(false)}
                 onSuccess={() => {
                     setIsCreateOpen(false);
-                    handleRefetch();
+                    refetch();
                 }}
             />
         </div>

@@ -1,21 +1,25 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Layers, Plus, Pencil, Calendar } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Card } from "../../../components/ui/card";
 import { Skeleton } from "../../../components/ui/skeleton";
-import type { Cell } from "../types/structure.types";
-import { useUpdateZoneLeaderMutation, useUpdateZoneMutation } from "../structureApiSlice";
-import { areasData, cellsData, zonesData } from "../../../mock/structure";
-import { StructureBreadcrumb } from "../components/StructureBreadcrumb";
-import { LeaderCard } from "../components/LeaderCard";
 import { CellCard } from "../components/CellCard";
+import { ViewCellDialog } from "../components/ViewCellDialog";
+import { LeaderCard } from "../components/LeaderCard";
 import { LeaderPickerDialog } from "../components/LeaderPickerDialog";
 import { CreateCellDialog } from "../components/CreateCellDialog";
+import { StructureBreadcrumb } from "../components/StructureBreadcrumb";
+import {
+    useFetchZoneQuery,
+    useUpdateZoneMutation,
+    useUpdateZoneLeaderMutation,
+} from "../structureApiSlice";
+import { handleApiError } from "../../../utils/functions";
+import type { Cell } from "../types/structure.types";
 import { EditDetailsDialog } from "../components/EditDetailDialog";
-import { ViewCellDialog } from "../components/ViewCellDialog";
 
 export default function ZoneDetailPage() {
     const { zoneId } = useParams<{ zoneId: string }>();
@@ -25,25 +29,36 @@ export default function ZoneDetailPage() {
     const [isCreateCellOpen, setIsCreateCellOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [selectedCell, setSelectedCell] = useState<Cell | null>(null);
-    const [isFetching, setIsFetching] = useState(false);
 
     const [updateZone] = useUpdateZoneMutation();
     const [updateZoneLeader] = useUpdateZoneLeaderMutation();
 
-    // Swap for useFetchZoneQuery(zoneId) once the real endpoint is wired
-    // up — it already returns { zone, cells } in exactly this shape.
-    const zone = useMemo(() => zonesData.find((z) => z.id === zoneId), [zoneId]);
-    const cells = useMemo(() => cellsData.filter((c) => c.zoneId === zoneId), [zoneId]);
-    const area = useMemo(
-        () => (zone ? areasData.find((a) => a.id === zone.areaId) : undefined),
-        [zone],
-    );
+    const {
+        data: response,
+        isFetching,
+        isError,
+        error,
+        refetch,
+    } = useFetchZoneQuery(zoneId!, { skip: !zoneId });
 
-    const handleRefetch = async () => {
-        setIsFetching(true);
-        await new Promise((r) => setTimeout(r, 400));
-        setIsFetching(false);
-    };
+    if (isError) handleApiError(error);
+
+    const zone = response?.data.zone;
+    const cells = response?.data.cells ?? [];
+
+    if (isFetching && !zone) {
+        return (
+            <div className="space-y-6">
+                <Skeleton className="h-5 w-64" />
+                <Skeleton className="h-40 rounded-xl" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                        <Skeleton key={i} className="h-32 rounded-xl" />
+                    ))}
+                </div>
+            </div>
+        );
+    }
 
     if (!zone) {
         return (
@@ -67,7 +82,7 @@ export default function ZoneDetailPage() {
             <StructureBreadcrumb
                 crumbs={[
                     { label: "Church Structure", to: "/structure" },
-                    ...(area ? [{ label: area.name, to: `/structure/areas/${area.id}` }] : []),
+                    { label: zone.areaName, to: `/structure/areas/${zone.areaId}` },
                     { label: zone.name },
                 ]}
             />
@@ -137,7 +152,7 @@ export default function ZoneDetailPage() {
                 onAssign={(leaderId) =>
                     updateZoneLeader({ id: zone.id, data: { leaderId } })
                         .unwrap()
-                        .then(() => handleRefetch())
+                        .then(() => refetch())
                 }
             />
 
@@ -146,7 +161,7 @@ export default function ZoneDetailPage() {
                 onClose={() => setIsCreateCellOpen(false)}
                 onSuccess={() => {
                     setIsCreateCellOpen(false);
-                    handleRefetch();
+                    refetch();
                 }}
                 zoneId={zone.id}
                 zoneName={zone.name}
@@ -157,12 +172,12 @@ export default function ZoneDetailPage() {
                 onClose={() => setIsEditOpen(false)}
                 onSuccess={() => {
                     setIsEditOpen(false);
-                    handleRefetch();
+                    refetch();
                 }}
                 title="Edit zone"
                 initialName={zone.name}
                 initialDescription={zone.description}
-                onSave={(data) => updateZone({ id: zone.id, data }).unwrap().then(() => handleRefetch())}
+                onSave={(data) => updateZone({ id: zone.id, data }).unwrap().then(() => refetch())}
             />
 
             <ViewCellDialog
@@ -170,7 +185,7 @@ export default function ZoneDetailPage() {
                 onClose={() => setSelectedCell(null)}
                 onSuccess={() => {
                     setSelectedCell(null);
-                    handleRefetch();
+                    refetch();
                 }}
             />
         </div>

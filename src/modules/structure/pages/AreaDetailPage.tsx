@@ -6,14 +6,23 @@ import { MapPin, Plus, Pencil, Calendar } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Card } from "../../../components/ui/card";
 import { Skeleton } from "../../../components/ui/skeleton";
-import { useUpdateAreaLeaderMutation, useUpdateAreaMutation } from "../structureApiSlice";
-import { areasData, cellsData, zonesData } from "../../../mock/structure";
-import { StructureBreadcrumb } from "../components/StructureBreadcrumb";
-import { LeaderCard } from "../components/LeaderCard";
 import { ZoneCard } from "../components/ZoneCard";
+import { LeaderCard } from "../components/LeaderCard";
 import { LeaderPickerDialog } from "../components/LeaderPickerDialog";
 import { CreateZoneDialog } from "../components/CreateZoneDialog";
+import { StructureBreadcrumb } from "../components/StructureBreadcrumb";
+import {
+    useFetchAreaQuery,
+    useFetchCellsQuery,
+    useUpdateAreaMutation,
+    useUpdateAreaLeaderMutation,
+} from "../structureApiSlice";
+import { handleApiError } from "../../../utils/functions";
 import { EditDetailsDialog } from "../components/EditDetailDialog";
+
+// Same caveat as AreasPage's zone-count fetch — only counts cells within
+// the first ALL_CELLS_LIMIT returned by GET /cells.
+const ALL_CELLS_LIMIT = 1000;
 
 export default function AreaDetailPage() {
     const { areaId } = useParams<{ areaId: string }>();
@@ -22,21 +31,45 @@ export default function AreaDetailPage() {
     const [isLeaderPickerOpen, setIsLeaderPickerOpen] = useState(false);
     const [isCreateZoneOpen, setIsCreateZoneOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
-    const [isFetching, setIsFetching] = useState(false);
 
     const [updateArea] = useUpdateAreaMutation();
     const [updateAreaLeader] = useUpdateAreaLeaderMutation();
 
-    // Swap for useFetchAreaQuery(areaId) once the real endpoint is wired
-    // up — it already returns { area, zones } in exactly this shape.
-    const area = useMemo(() => areasData.find((a) => a.id === areaId), [areaId]);
-    const zones = useMemo(() => zonesData.filter((z) => z.areaId === areaId), [areaId]);
+    const {
+        data: response,
+        isFetching,
+        isError,
+        error,
+        refetch,
+    } = useFetchAreaQuery(areaId!, { skip: !areaId });
 
-    const handleRefetch = async () => {
-        setIsFetching(true);
-        await new Promise((r) => setTimeout(r, 400));
-        setIsFetching(false);
-    };
+    if (isError) handleApiError(error);
+
+    const area = response?.data.area;
+    const zones = response?.data.zones ?? [];
+
+    const { data: cellsResponse } = useFetchCellsQuery({ page: 1, limit: ALL_CELLS_LIMIT });
+    const cellCountByZone = useMemo(() => {
+        const counts: Record<string, number> = {};
+        (cellsResponse?.data.content ?? []).forEach((cell) => {
+            counts[cell.zoneId] = (counts[cell.zoneId] ?? 0) + 1;
+        });
+        return counts;
+    }, [cellsResponse]);
+
+    if (isFetching && !area) {
+        return (
+            <div className="space-y-6">
+                <Skeleton className="h-5 w-64" />
+                <Skeleton className="h-40 rounded-xl" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                        <Skeleton key={i} className="h-36 rounded-xl" />
+                    ))}
+                </div>
+            </div>
+        );
+    }
 
     if (!area) {
         return (
@@ -116,7 +149,7 @@ export default function AreaDetailPage() {
                         <ZoneCard
                             key={zone.id}
                             zone={zone}
-                            cellCount={cellsData.filter((c) => c.zoneId === zone.id).length}
+                            cellCount={cellCountByZone[zone.id] ?? 0}
                         />
                     ))}
                 </div>
@@ -130,7 +163,7 @@ export default function AreaDetailPage() {
                 onAssign={(leaderId) =>
                     updateAreaLeader({ id: area.id, data: { leaderId } })
                         .unwrap()
-                        .then(() => handleRefetch())
+                        .then(() => refetch())
                 }
             />
 
@@ -139,7 +172,7 @@ export default function AreaDetailPage() {
                 onClose={() => setIsCreateZoneOpen(false)}
                 onSuccess={() => {
                     setIsCreateZoneOpen(false);
-                    handleRefetch();
+                    refetch();
                 }}
                 areaId={area.id}
                 areaName={area.name}
@@ -150,12 +183,12 @@ export default function AreaDetailPage() {
                 onClose={() => setIsEditOpen(false)}
                 onSuccess={() => {
                     setIsEditOpen(false);
-                    handleRefetch();
+                    refetch();
                 }}
                 title="Edit area"
                 initialName={area.name}
                 initialDescription={area.description}
-                onSave={(data) => updateArea({ id: area.id, data }).unwrap().then(() => handleRefetch())}
+                onSave={(data) => updateArea({ id: area.id, data }).unwrap().then(() => refetch())}
             />
         </div>
     );

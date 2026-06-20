@@ -26,6 +26,7 @@ const NotFound = lazy(() => import("./modules/NotFound"));
 const AreasPage = lazy(() => import("./modules/structure/pages/AreasPage"));
 const AreaDetailPage = lazy(() => import("./modules/structure/pages/AreaDetailPage"));
 const ZoneDetailPage = lazy(() => import("./modules/structure/pages/ZoneDetailPage"));
+const VisitorsPage = lazy(() => import("./modules/visitors/pages/VisitorsPage"));
 
 const queryClient = new QueryClient();
 
@@ -62,7 +63,8 @@ function App() {
               <Route path="/users" element={<S><UsersPage /></S>} />
               <Route path="/structure" element={ <S><AreasPage /></S>}/>
               <Route path="/structure/areas/:areaId" element={ <S><AreaDetailPage /></S>}/>
-              <Route path="/structure/zones/:zoneId" element={ <S><ZoneDetailPage /></S>}/>
+              <Route path="/structure/zones/:zoneId" element={<S><ZoneDetailPage /></S>} />
+              <Route path="/visitors" element={ <S><VisitorsPage /></S>}/>
               {/* <Route path="/system/audit" element={ <S><SystemAuditLogsPage /></S>}/> */}
               <Route path="/system/notifications" element={<S><NotificationsPage /></S>} />
               <Route path="/unauthorized"  element={<S><Unauthorized /></S>} />
