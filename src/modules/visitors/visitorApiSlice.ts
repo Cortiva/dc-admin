@@ -62,7 +62,7 @@ export const visitorsApiSlice = apiSlice.injectEndpoints({
             CreateVisitorRequest[]
         >({
             query: (data) => ({
-                url: `/visitors/import`,
+                url: `/visitors/bulk`,
                 method: "POST",
                 body: data,
             }),

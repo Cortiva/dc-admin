@@ -12,6 +12,7 @@ import { lazy, Suspense } from "react";
 import AppLayout from "./components/layouts/AppLayout";
 import PageLoader from "./components/helper/PageLoader";
 import AuthLayout from "./components/layouts/AuthLayout";
+import SelfRegisterPage from "./modules/auth/pages/SelfRegisterPage";
 
 const LoginPage = lazy(() => import("./modules/auth/pages/LoginPage"));
 const ForgotPassword = lazy(() => import("./modules/auth/pages/ForgotPassword"));
@@ -19,7 +20,7 @@ const VerifyOtp = lazy(() => import("./modules/auth/pages/VerifyOtp"));
 const ResetPasswordPage = lazy(() => import("./modules/auth/pages/ResetPassword"));
 const Dashboard = lazy(() => import("./modules/dashboard/pages/DashboardPage"));
 const UsersPage = lazy(() => import("./modules/users/pages/UsersPage"));
-const AcceptInvitePage = lazy(() => import("./modules/users/pages/AcceptInvitePage"));
+const AcceptInvitePage = lazy(() => import("./modules/auth/pages/AcceptInvitePage"));
 const NotificationsPage = lazy(() => import("./modules/notification/pages/NotificationsPage"));
 const Unauthorized = lazy(() => import("./modules/Unauthorized"));
 const NotFound = lazy(() => import("./modules/NotFound"));
@@ -51,7 +52,10 @@ function App() {
                 <Route path="login" element={ <AuthLayout><S><LoginPage /></S></AuthLayout>}/>
                 <Route path="forgot-password" element={ <AuthLayout><S><ForgotPassword /></S></AuthLayout>}/>
                 <Route path="verify-otp" element={ <AuthLayout><S><VerifyOtp /></S></AuthLayout>}/>
-                <Route path="reset-password" element={ <AuthLayout><S><ResetPasswordPage /></S></AuthLayout>}/>
+              <Route path="reset-password" element={<AuthLayout><S><ResetPasswordPage /></S></AuthLayout>} />
+
+              <Route path="self-register" element={<AuthLayout><S><SelfRegisterPage /></S></AuthLayout>} />
+              
               </Route>
 
               <Route path="accept-invite" element={ <AuthLayout><S><AcceptInvitePage /></S></AuthLayout>}/>

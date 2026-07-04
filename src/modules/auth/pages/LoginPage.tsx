@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { setCredentials } from "../authSlice";
 import { getGreeting, handleApiError } from "../../../utils/functions";
 import { Button } from "../../../components/ui/button";
-import { Eye, EyeOff } from "lucide-react";
 import { Label } from "../../../components/ui/label";
 import { Input } from "../../../components/ui/input";
 import { useLoginMutation } from "../authApiSlice";
@@ -16,6 +16,7 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [rememberMe, setRememberMe] = useState(false);
     const [username, setUsername] = useState(
         () => localStorage.getItem("paName") ?? "Admin",
     );
@@ -31,7 +32,16 @@ export default function LoginPage() {
         if (!isFormValid || isLoading) return;
 
         try {
-            const result = await login({ email, password }).unwrap();
+            const result = await login({ 
+                email, 
+                password,
+                rememberMe,
+                deviceInfo: {
+                    deviceType: "web",
+                    userAgent: navigator.userAgent,
+                }
+            }).unwrap();
+            
             const { accessToken, refreshToken, user, expiresIn, tokenType } =
                 result.data;
 
@@ -40,8 +50,6 @@ export default function LoginPage() {
                 return;
             }
 
-            // Persist the display name so the greeting survives a reload,
-            // not just the in-memory state for this session.
             localStorage.setItem("paName", user.firstName);
             setUsername(user.firstName);
 
@@ -98,13 +106,12 @@ export default function LoginPage() {
                 <div className="flex flex-col space-y-3">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="password">Password</Label>
-                        <button
-                            type="button"
-                            className="text-xs font-medium text-primary cursor-pointer"
-                            onClick={() => navigate("/forgot-password")}
+                        <Link
+                            to="/forgot-password"
+                            className="text-xs font-medium text-primary hover:underline"
                         >
                             Forgot Password?
-                        </button>
+                        </Link>
                     </div>
 
                     <div className="relative">
@@ -136,6 +143,18 @@ export default function LoginPage() {
                     </div>
                 </div>
 
+                <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
+                            className="h-4 w-4 rounded border-border text-primary focus:ring-primary/30"
+                        />
+                        Remember me
+                    </label>
+                </div>
+
                 <div className="flex flex-row justify-center items-center">
                     <Button
                         type="button"
@@ -145,13 +164,20 @@ export default function LoginPage() {
                     >
                         {isLoading ? (
                             <div className="flex items-center gap-2">
-                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                <Loader2 size={18} className="animate-spin" />
                                 Signing in...
                             </div>
                         ) : (
                             "Sign In"
                         )}
                     </Button>
+                </div>
+
+                <div className="text-center text-sm text-muted-foreground">
+                    Don't have an account?{" "}
+                    <Link to="/register" className="text-primary font-medium hover:underline">
+                        Create one
+                    </Link>
                 </div>
             </div>
         </div>

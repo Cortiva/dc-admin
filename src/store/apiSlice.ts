@@ -14,6 +14,7 @@ import {
 import type { AuthUser } from "../types/auth.types";
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL as string;
+const apiKey = import.meta.env.VITE_API_KEY as string;
 
 const baseQuery = fetchBaseQuery({
     baseUrl,
@@ -21,6 +22,7 @@ const baseQuery = fetchBaseQuery({
         const token = selectCurrentAccessToken(getState() as RootState);
         headers.set("Content-Type", "application/json");
         headers.set("Accept", "application/json");
+        headers.set("x-api-key", apiKey);
         if (token) headers.set("Authorization", `Bearer ${token}`);
         return headers;
     },

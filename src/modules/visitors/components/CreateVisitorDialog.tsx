@@ -48,6 +48,7 @@ const EMPTY_FORM: CreateVisitorRequest = {
     serviceType: "SUNDAY_SERVICE",
     visitDate: new Date().toISOString().slice(0, 10),
     notes: "",
+    status: "FIRST_TIMER"
 };
 
 export default function CreateVisitorDialog({ isOpen, onClose, onSuccess }: CreateVisitorDialogProps) {
@@ -111,6 +112,7 @@ export default function CreateVisitorDialog({ isOpen, onClose, onSuccess }: Crea
                                     value={form.phone}
                                     onChange={(e) => update("phone", e.target.value)}
                                     placeholder="+234 803 555 1212"
+                                    maxLength={15}
                                 />
                             </div>
                             <div className="space-y-2">

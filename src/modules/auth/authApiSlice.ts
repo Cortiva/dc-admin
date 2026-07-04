@@ -1,25 +1,34 @@
 import { apiSlice } from "../../store/apiSlice";
-import type { AuthUser } from "../../types/auth.types";
+import type {
+    AuthUser,
+    ValidateMemberNumberResponse,
+} from "../../types/auth.types";
 
-interface RegisterRequest {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    role: "SUPER_ADMIN" | "ADMIN" | "USER";
-}
+// ─── Request Types ──────────────────────────────────────────────────────────
 
 interface SelfRegisterRequest {
-    email: string;
+    memberNumber: string;
     password: string;
     confirmPassword: string;
-    firstName: string;
-    lastName: string;
+    email?: string;
+    phone?: string;
+}
+
+interface ValidateMemberNumberRequest {
+    memberNumber: string;
 }
 
 interface LoginRequest {
     email: string;
     password: string;
+    rememberMe?: boolean;
+    deviceInfo?: {
+        deviceId?: string;
+        deviceType?: "web" | "mobile" | "tablet";
+        userAgent?: string;
+        ipAddress?: string;
+        platform?: "ios" | "android" | "web";
+    };
 }
 
 interface RefreshTokenRequest {
@@ -29,6 +38,7 @@ interface RefreshTokenRequest {
 interface ChangePasswordRequest {
     currentPassword: string;
     newPassword: string;
+    confirmPassword: string;
 }
 
 interface ForgotPasswordRequest {
@@ -36,7 +46,8 @@ interface ForgotPasswordRequest {
 }
 
 interface ResetPasswordRequest {
-    resetToken: string;
+    email: string;
+    otp: string;
     newPassword: string;
     confirmPassword: string;
 }
@@ -52,11 +63,22 @@ interface AcceptInviteRequest {
     confirmPassword: string;
 }
 
-interface MessageResponse {
-    message: string;
+interface ResendOtpRequest {
+    email: string;
+    purpose: "EMAIL_VERIFICATION" | "PASSWORD_RESET";
 }
 
-// The actual payload the backend sends back for auth endpoints.
+interface LogoutRequest {
+    refreshToken?: string;
+}
+
+interface MessageResponse {
+    message: string;
+    success: boolean;
+}
+
+// ─── Response Types ─────────────────────────────────────────────────────────
+
 interface AuthPayload {
     user: AuthUser;
     accessToken: string;
@@ -65,25 +87,47 @@ interface AuthPayload {
     expiresIn: number;
 }
 
-// The backend wraps every payload in a `data` envelope — LoginPage.tsx
-// destructures `result.data`, so the response type needs to reflect that
-// wrapper instead of putting the fields at the top level. Previously
-// AuthResponse had no `data` field at all, which meant `result.data` in
-// LoginPage only worked by accident (because `login` had no generics, so
-// nothing was type-checked).
 interface AuthResponse {
     data: AuthPayload;
 }
 
+interface OtpSentResponse {
+    message: string;
+    email: string;
+    resendAfter?: number;
+    success: boolean;
+}
+
+interface SessionResponse {
+    id: string;
+    userId: string;
+    deviceInfo: string | null;
+    ipAddress: string | null;
+    userAgent: string | null;
+    createdAt: string;
+    expiresAt: string;
+    isCurrent: boolean;
+}
+
+// ─── API Slice ──────────────────────────────────────────────────────────────
+
 export const authApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
-        register: builder.mutation<AuthResponse, RegisterRequest>({
+        // ─── Member Number Validation ──────────────────────────────────────
+
+        validateMemberNumber: builder.mutation<
+            ValidateMemberNumberResponse,
+            ValidateMemberNumberRequest
+        >({
             query: (data) => ({
-                url: `/auth/register`,
+                url: `/auth/validate-member`,
                 method: "POST",
                 body: data,
             }),
         }),
+
+        // ─── Self Register ──────────────────────────────────────────────────
+
         selfRegister: builder.mutation<AuthResponse, SelfRegisterRequest>({
             query: (data) => ({
                 url: `/auth/self-register`,
@@ -91,6 +135,9 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 body: data,
             }),
         }),
+
+        // ─── Login ─────────────────────────────────────────────────────────
+
         login: builder.mutation<AuthResponse, LoginRequest>({
             query: (data) => ({
                 url: `/auth/login`,
@@ -98,6 +145,9 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 body: data,
             }),
         }),
+
+        // ─── Refresh Token ─────────────────────────────────────────────────
+
         refreshToken: builder.mutation<AuthResponse, RefreshTokenRequest>({
             query: (data) => ({
                 url: `/auth/refresh`,
@@ -105,31 +155,62 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 body: data,
             }),
         }),
-        acceptInvite: builder.mutation<MessageResponse, AcceptInviteRequest>({
+
+        // ─── Logout ─────────────────────────────────────────────────────────
+
+        logout: builder.mutation<MessageResponse, LogoutRequest>({
             query: (data) => ({
-                url: `/auth/accept-invite`,
+                url: `/auth/logout`,
                 method: "POST",
                 body: data,
             }),
         }),
+
         logoutAll: builder.mutation<MessageResponse, void>({
             query: () => ({
                 url: `/auth/logout-all`,
                 method: "POST",
             }),
         }),
-        changePassword: builder.mutation<
-            MessageResponse,
-            ChangePasswordRequest
-        >({
+
+        // ─── Sessions ──────────────────────────────────────────────────────
+
+        getSessions: builder.query<SessionResponse[], void>({
+            query: () => ({
+                url: `/auth/sessions`,
+                method: "GET",
+            }),
+        }),
+
+        revokeSession: builder.mutation<MessageResponse, string>({
+            query: (sessionId) => ({
+                url: `/auth/sessions/${sessionId}`,
+                method: "DELETE",
+            }),
+        }),
+
+        // ─── Account Verification ──────────────────────────────────────────
+
+        verifyEmail: builder.mutation<MessageResponse, VerifyEmailRequest>({
             query: (data) => ({
-                url: `/auth/change-password`,
-                method: "PUT",
+                url: `/auth/verify`,
+                method: "POST",
                 body: data,
             }),
         }),
+
+        resendOtp: builder.mutation<OtpSentResponse, ResendOtpRequest>({
+            query: (data) => ({
+                url: `/auth/resend-otp`,
+                method: "POST",
+                body: data,
+            }),
+        }),
+
+        // ─── Password Management ───────────────────────────────────────────
+
         forgotPassword: builder.mutation<
-            MessageResponse,
+            OtpSentResponse,
             ForgotPasswordRequest
         >({
             query: (data) => ({
@@ -138,13 +219,7 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 body: data,
             }),
         }),
-        verifyEmail: builder.mutation<MessageResponse, VerifyEmailRequest>({
-            query: (data) => ({
-                url: `/auth/verify-forgot-password`,
-                method: "POST",
-                body: data,
-            }),
-        }),
+
         resetPassword: builder.mutation<MessageResponse, ResetPasswordRequest>({
             query: (data) => ({
                 url: `/auth/reset-password`,
@@ -152,18 +227,45 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 body: data,
             }),
         }),
+
+        changePassword: builder.mutation<
+            MessageResponse,
+            ChangePasswordRequest
+        >({
+            query: (data) => ({
+                url: `/auth/change-password`,
+                method: "POST",
+                body: data,
+            }),
+        }),
+
+        // ─── Invitations ────────────────────────────────────────────────────
+
+        acceptInvite: builder.mutation<MessageResponse, AcceptInviteRequest>({
+            query: (data) => ({
+                url: `/auth/accept-invite`,
+                method: "POST",
+                body: data,
+            }),
+        }),
     }),
 });
 
+// ─── Exports ────────────────────────────────────────────────────────────────
+
 export const {
+    useValidateMemberNumberMutation,
     useSelfRegisterMutation,
-    useRegisterMutation,
     useLoginMutation,
     useRefreshTokenMutation,
-    useAcceptInviteMutation,
+    useLogoutMutation,
     useLogoutAllMutation,
-    useChangePasswordMutation,
+    useGetSessionsQuery,
+    useRevokeSessionMutation,
     useVerifyEmailMutation,
+    useResendOtpMutation,
     useForgotPasswordMutation,
     useResetPasswordMutation,
+    useChangePasswordMutation,
+    useAcceptInviteMutation,
 } = authApiSlice;

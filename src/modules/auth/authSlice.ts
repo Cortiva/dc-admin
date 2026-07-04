@@ -13,7 +13,7 @@ interface AuthState {
     isHydrated: boolean;
 }
 
-// Cookie keys centralized so storage and retrieval can never drift apart.
+// Cookie keys
 const COOKIE_KEYS = {
     accessToken: "dcToken",
     refreshToken: "dcRefreshToken",
@@ -24,19 +24,13 @@ const COOKIE_KEYS = {
 
 const ALL_COOKIE_KEYS = Object.values(COOKIE_KEYS);
 
-// Reads + decrypts a cookie, returning the raw decrypted string (or null).
+// Reads + decrypts a cookie
 const getDecryptedCookie = (key: string): string | null => {
     const cookie = Cookies.get(key);
-
-    if (!cookie) {
-        console.log(`No cookie found for ${key}`);
-        return null;
-    }
+    if (!cookie) return null;
 
     try {
         const decrypted = decryptData(cookie);
-        // decryptData's return type isn't guaranteed to be a string;
-        // normalize so callers always get a string or null.
         return typeof decrypted === "string"
             ? decrypted
             : JSON.stringify(decrypted);
@@ -46,7 +40,7 @@ const getDecryptedCookie = (key: string): string | null => {
     }
 };
 
-// Reads + decrypts + parses the user cookie into an AuthUser.
+// Reads + decrypts + parses the user cookie
 const getDecryptedUser = (): AuthUser | null => {
     const raw = getDecryptedCookie(COOKIE_KEYS.user);
     if (!raw) return null;
@@ -59,8 +53,7 @@ const getDecryptedUser = (): AuthUser | null => {
     }
 };
 
-// Writes a cookie as ciphertext. Centralized so every write goes through
-// the same encrypt-then-set path and the same error handling.
+// Writes a cookie as ciphertext
 const setEncryptedCookie = (
     key: string,
     value: string,
@@ -76,8 +69,6 @@ const setEncryptedCookie = (
 const buildCookieOptions = (expiresIn?: number): Cookies.CookieAttributes => ({
     secure: true,
     sameSite: "strict",
-    // Falls back to a 7-day session cookie when no explicit TTL is given,
-    // instead of silently defaulting to a same-session-only cookie.
     expires: expiresIn ? new Date(Date.now() + expiresIn * 1000) : 7,
 });
 
@@ -140,12 +131,6 @@ const authSlice = createSlice({
                 refreshToken,
                 cookieOptions,
             );
-            // Store the FULL user object — not a stripped-down copy — so
-            // that selectCurrentUser() returns the same shape both right
-            // after login and after a page refresh. Storing a "minimal"
-            // user here previously meant fields like `id` vanished on
-            // rehydration even though they were present in Redux state
-            // immediately after login.
             setEncryptedCookie(
                 COOKIE_KEYS.user,
                 JSON.stringify(user),
@@ -164,8 +149,6 @@ const authSlice = createSlice({
             if (!user) return;
 
             state.user = user;
-            // No expiresIn available here, so this reuses the existing
-            // token expiry if we have one, otherwise falls back to 7 days.
             const cookieOptions = buildCookieOptions(
                 state.expiresIn ?? undefined,
             );
@@ -184,10 +167,6 @@ const authSlice = createSlice({
             state.accessToken = token;
             state.expiresIn = expiresIn;
 
-            // Previously this set the cookie with no `expires` option,
-            // which makes js-cookie default to a session-only cookie —
-            // silently shortening the persisted session on every token
-            // refresh. Now it carries the new TTL forward explicitly.
             const cookieOptions = buildCookieOptions(expiresIn);
             setEncryptedCookie(COOKIE_KEYS.accessToken, token, cookieOptions);
             setEncryptedCookie(
@@ -240,5 +219,7 @@ export const selectTokenExpiry = (state: RootState): number | null =>
     state.auth.expiresIn;
 export const selectIsHydrated = (state: RootState): boolean =>
     state.auth.isHydrated;
+export const selectMemberNumber = (state: RootState): string | null =>
+    state.auth.user?.memberNumber || null;
 
 export default authSlice.reducer;

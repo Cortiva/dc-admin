@@ -61,7 +61,7 @@ export default function ResetPasswordPage() {
         }
  
         try {
-            await resetPassword({ resetToken, newPassword, confirmPassword }).unwrap();
+            await resetPassword({ email, otp: resetToken, newPassword, confirmPassword }).unwrap();
             setSuccess(true);
         } catch (err) {
             handleApiError(err);

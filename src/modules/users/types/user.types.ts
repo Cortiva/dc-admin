@@ -15,6 +15,7 @@ export type UserRole = "SUPER_ADMIN" | "ADMIN" | "USER";
 export type UserStatus =
     | "PENDING_INVITE"
     | "PENDING_APPROVAL"
+    | "PENDING_VERIFICATION"
     | "ACTIVE"
     | "REJECTED"
     | "SUSPENDED";

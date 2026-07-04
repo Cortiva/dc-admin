@@ -90,6 +90,7 @@ export interface CreateVisitorRequest {
     serviceType: ServiceType;
     visitDate: string;
     notes: string;
+    status: VisitorStatus;
 }
 
 export interface UpdateVisitorRequest {
