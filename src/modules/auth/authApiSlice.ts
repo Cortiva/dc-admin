@@ -1,8 +1,7 @@
+// store/api/authApiSlice.ts
+
 import { apiSlice } from "../../store/apiSlice";
-import type {
-    AuthUser,
-    ValidateMemberNumberResponse,
-} from "../../types/auth.types";
+import type { AuthUser } from "../../types/auth.types";
 
 // ─── Request Types ──────────────────────────────────────────────────────────
 
@@ -12,10 +11,6 @@ interface SelfRegisterRequest {
     confirmPassword: string;
     email?: string;
     phone?: string;
-}
-
-interface ValidateMemberNumberRequest {
-    memberNumber: string;
 }
 
 interface LoginRequest {
@@ -57,12 +52,6 @@ interface VerifyEmailRequest {
     otp: string;
 }
 
-interface AcceptInviteRequest {
-    token: string;
-    password: string;
-    confirmPassword: string;
-}
-
 interface ResendOtpRequest {
     email: string;
     purpose: "EMAIL_VERIFICATION" | "PASSWORD_RESET";
@@ -87,6 +76,7 @@ interface AuthPayload {
     expiresIn: number;
 }
 
+// ✅ Make sure the response has a `data` property
 interface AuthResponse {
     data: AuthPayload;
 }
@@ -115,10 +105,7 @@ export const authApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         // ─── Member Number Validation ──────────────────────────────────────
 
-        validateMemberNumber: builder.mutation<
-            ValidateMemberNumberResponse,
-            ValidateMemberNumberRequest
-        >({
+        validateMemberNumber: builder.mutation({
             query: (data) => ({
                 url: `/auth/validate-member`,
                 method: "POST",
@@ -238,16 +225,6 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 body: data,
             }),
         }),
-
-        // ─── Invitations ────────────────────────────────────────────────────
-
-        acceptInvite: builder.mutation<MessageResponse, AcceptInviteRequest>({
-            query: (data) => ({
-                url: `/auth/accept-invite`,
-                method: "POST",
-                body: data,
-            }),
-        }),
     }),
 });
 
@@ -267,5 +244,4 @@ export const {
     useForgotPasswordMutation,
     useResetPasswordMutation,
     useChangePasswordMutation,
-    useAcceptInviteMutation,
 } = authApiSlice;

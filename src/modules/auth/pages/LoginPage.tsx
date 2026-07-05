@@ -28,12 +28,14 @@ export default function LoginPage() {
 
     const isFormValid = email.trim() !== "" && password !== "";
 
+    // pages/auth/LoginPage.tsx
+
     const handleLogin = async () => {
         if (!isFormValid || isLoading) return;
 
         try {
-            const result = await login({ 
-                email, 
+            const result = await login({
+                email,
                 password,
                 rememberMe,
                 deviceInfo: {
@@ -41,9 +43,10 @@ export default function LoginPage() {
                     userAgent: navigator.userAgent,
                 }
             }).unwrap();
-            
-            const { accessToken, refreshToken, user, expiresIn, tokenType } =
-                result.data;
+        
+            // ✅ The backend returns data directly in the response
+            // The response structure is: { data: { accessToken, refreshToken, user, expiresIn, tokenType } }
+            const { accessToken, refreshToken, user, expiresIn, tokenType } = result.data;
 
             if (!ADMIN_ROLES.includes(user.role as (typeof ADMIN_ROLES)[number])) {
                 toast.error("Access denied — admin accounts only");
@@ -60,7 +63,7 @@ export default function LoginPage() {
                     user,
                     expiresIn,
                     tokenType,
-                }),
+                })
             );
             toast.success(`Welcome back, ${user.firstName}`);
             navigate("/dashboard", { replace: true });

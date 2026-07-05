@@ -60,3 +60,10 @@ export function toPaginatedResponse<T>(
         totalPages: page.totalPages,
     };
 }
+
+// Every controller response is wrapped as { message, data }.
+// This helper unwraps it once, consistently, for every endpoint below.
+export interface ApiEnvelope<T> {
+    message: string;
+    data: T;
+}

@@ -4,13 +4,15 @@ export interface TokenPayload {
     exp?: number;
 }
 
+// types/auth.types.ts
+
 export interface AuthUser {
     id: string;
+    memberNumber: string;
     firstName: string;
     lastName: string;
     phone: string;
     email: string;
-    memberNumber: string;
     role: "USER" | "ADMIN" | "SUPER_ADMIN";
     status:
         | "PENDING_VERIFICATION"

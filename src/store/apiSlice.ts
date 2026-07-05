@@ -100,5 +100,6 @@ export const apiSlice = createApi({
         "Cells",
         "Visitors",
         "VisitorMetrics",
+        "Dashboard",
     ],
 });

@@ -8,7 +8,7 @@ import {
     differenceInHours,
     isThisYear,
 } from "date-fns";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 type ApiError = {
     data?: {

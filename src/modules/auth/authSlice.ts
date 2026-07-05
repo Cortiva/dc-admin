@@ -46,7 +46,11 @@ const getDecryptedUser = (): AuthUser | null => {
     if (!raw) return null;
 
     try {
-        return JSON.parse(raw) as AuthUser;
+        const user = JSON.parse(raw) as AuthUser;
+        if (!user.memberNumber) {
+            user.memberNumber = "";
+        }
+        return user;
     } catch (error) {
         console.error("Failed to parse user cookie:", error);
         return null;
