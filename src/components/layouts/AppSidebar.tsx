@@ -63,7 +63,6 @@ const buildSections = (): NavSection[] => [
                 children: [
                     { title: "All Members", url: "/members" },
                     { title: "Statistics", url: "/members/stats" },
-                    { title: "Add Member", url: "/members/create" },
                 ],
             },
         ],

@@ -1,4 +1,5 @@
 import { apiSlice } from "../../store/apiSlice";
+import type { ApiEnvelope } from "../../types/api";
 import type {
     CreateMemberRequest,
     MemberAssignCellRequest,
@@ -137,18 +138,23 @@ export const memberApiSlice = apiSlice.injectEndpoints({
                 url: `/members/stats`,
                 method: "GET",
             }),
+            transformResponse: (response: ApiEnvelope<MemberStatsResponse>) =>
+                response.data,
             providesTags: ["Members"],
         }),
 
         getMemberGrowth: builder.query<
-            any,
+            { period: string; count: number }[],
             { period?: "daily" | "weekly" | "monthly"; limit?: number }
         >({
             query: (params) => ({
-                url: `/members/growth`,
+                url: `/members/stats/growth`,
                 method: "GET",
                 params,
             }),
+            transformResponse: (
+                response: ApiEnvelope<{ period: string; count: number }[]>,
+            ) => response.data,
             providesTags: ["Members"],
         }),
 
@@ -165,16 +171,18 @@ export const memberApiSlice = apiSlice.injectEndpoints({
 
         // ─── Bulk Import ──────────────────────────────────────────────────
         bulkImportMembers: builder.mutation<
-            { total: number; created: number; failed: number; errors: any[] },
-            FormData
+            {
+                total: number;
+                created: number;
+                failed: number;
+                errors: Array<{ index: number; error: string }>;
+            },
+            CreateMemberRequest[]
         >({
-            query: (formData) => ({
-                url: `/members/bulk-import`,
+            query: (data) => ({
+                url: `/members/bulk`,
                 method: "POST",
-                body: formData,
-                headers: {
-                    // Let the browser set the Content-Type for FormData
-                },
+                body: { members: data },
             }),
             invalidatesTags: ["Members"],
         }),

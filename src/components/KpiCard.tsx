@@ -29,12 +29,12 @@ export default function KPICard({ title, subtitle, value, change, icon, color }:
         <Card className="bg-card rounded-xl shadow-sm border border-muted-card p-4 sm:p-3">
             <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
                 <div className="flex flex-row gap-3 items-center min-w-0">
-                    <div className={`w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-lg ${colorClasses[color]} flex items-center justify-center`}>
+                    <div className={`w-6 h-6 sm:w-10 sm:h-10 shrink-0 rounded-sm ${colorClasses[color]} flex items-center justify-center`}>
                         {icon}
                     </div>
                     <div className="flex flex-col min-w-0">
-                        <h3 className="text-sm sm:text-[16px] font-medium truncate">{title}</h3>
-                        <p className="text-xs sm:text-[13px] text-muted-foreground truncate">{subtitle}</p>
+                        <h3 className="text-sm sm:text-[14px] font-medium truncate">{title}</h3>
+                        <p className="text-xs sm:text-[12px] text-muted-foreground truncate">{subtitle}</p>
                     </div>
                 </div>
                 {change !== undefined && (
@@ -44,7 +44,7 @@ export default function KPICard({ title, subtitle, value, change, icon, color }:
                     </div>
                 )}
             </div>
-            <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold truncate">{value}</h3>
+            <h3 className="text-md sm:text-xl lg:text-2xl xl:text-3xl font-bold truncate">{value}</h3>
         </Card>
     );
 }

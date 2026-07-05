@@ -4,7 +4,17 @@ import KPICard from "../../../components/KpiCard";
 import { formatNumber } from "../../../utils/functions";
 
 interface MemberStatsProps {
-    stats: any;
+    stats: {
+        total: number;
+        fullMembers: number;
+        visitors: number;
+        believers: number;
+        birthdayThisMonth: number;
+        growth: {
+            lastMonth: number;
+        };
+        conversionRate: number;
+    };
     isLoading: boolean;
 }
 

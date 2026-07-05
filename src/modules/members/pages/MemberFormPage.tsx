@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { ArrowLeft, Loader2, CheckCircle, XCircle, Phone, Mail } from "lucide-react";
 import { toast } from "sonner";
+import { useDispatch } from "react-redux";
 import PageHeader from "../../../components/PageHeader";
 import { Card } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
@@ -9,99 +10,267 @@ import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
 import { Checkbox } from "../../../components/ui/checkbox";
-import { Skeleton } from "../../../components/ui/skeleton";
-import { useCreateMemberMutation, useGetMemberByIdQuery, useUpdateMemberMutation } from "../memberApiSlice";
-import { handleApiError } from "../../../utils/functions";
+import { useCreateMemberMutation, useUpdateMemberMutation } from "../memberApiSlice";
+import { handleApiError, validateEmail, validateNigerianPhone } from "../../../utils/functions";
+import type { CreateMemberRequest, Gender, MemberResponse } from "../../../types/member.type";
+import { apiSlice } from "../../../store/apiSlice";
+import { ProfileImageUpload } from "../_components/ProfileImageUpload";
 
 export default function MemberFormPage() {
-    const { id } = useParams<{ id: string }>();
+    const location = useLocation();
     const navigate = useNavigate();
-    const isEdit = !!id;
+    const dispatch = useDispatch();
+    
+    // Get member from route state
+    const memberFromState = location.state?.member as MemberResponse | undefined;
+    const isEdit = !!memberFromState;
 
     const [formData, setFormData] = useState({
-        firstName: "",
-        lastName: "",
-        phone: "",
-        email: "",
-        gender: "",
-        homeAddress: "",
-        localGovernmentArea: "",
-        birthday: "",
-        isMarried: false,
-        weddingDate: "",
-        profileImageUrl: "",
-        isBeliever: true,
-        attendedDCABasic: false,
-        attendedDCAMerit: false,
-        attendedEncounter: false,
-        cellId: "",
-        departmentId: "",
+        firstName: memberFromState?.firstName || "",
+        lastName: memberFromState?.lastName || "",
+        phone: memberFromState?.phone || "",
+        email: memberFromState?.email || "",
+        gender: memberFromState?.gender || "" as string,
+        homeAddress: memberFromState?.homeAddress || "",
+        localGovernmentArea: memberFromState?.localGovernmentArea || "",
+        birthday: memberFromState?.birthday ? new Date(memberFromState.birthday).toISOString().split("T")[0] : "",
+        isMarried: memberFromState?.isMarried || false,
+        weddingDate: memberFromState?.weddingDate ? new Date(memberFromState.weddingDate).toISOString().split("T")[0] : "",
+        profileImageUrl: memberFromState?.profileImageUrl || "",
+        isBeliever: memberFromState?.isBeliever ?? true,
+        attendedDCABasic: memberFromState?.attendedDCABasic || false,
+        attendedDCAMerit: memberFromState?.attendedDCAMerit || false,
+        attendedEncounter: memberFromState?.attendedEncounter || false,
+        cellId: memberFromState?.cellId || "",
+        departmentId: memberFromState?.departmentId || "",
     });
+
+    // ─── Validation States ──────────────────────────────────────────────────
+
+    const [phoneError, setPhoneError] = useState<string | null>(null);
+    const [emailError, setEmailError] = useState<string | null>(null);
+    const [isPhoneValid, setIsPhoneValid] = useState(false);
+    const [isEmailValid, setIsEmailValid] = useState(false);
+    const [phoneTouched, setPhoneTouched] = useState(false);
+    const [emailTouched, setEmailTouched] = useState(false);
 
     const [createMember, { isLoading: isCreating }] = useCreateMemberMutation();
     const [updateMember, { isLoading: isUpdating }] = useUpdateMemberMutation();
-    const { data: member, isLoading: isLoadingMember } = useGetMemberByIdQuery(id!, { skip: !id });
 
+    // Validate initial data from state
     useEffect(() => {
-        if (member) {
-            setFormData({
-                firstName: member.firstName,
-                lastName: member.lastName,
-                phone: member.phone,
-                email: member.email || "",
-                gender: member.gender || "",
-                homeAddress: member.homeAddress || "",
-                localGovernmentArea: member.localGovernmentArea || "",
-                birthday: member.birthday ? new Date(member.birthday).toISOString().split("T")[0] : "",
-                isMarried: member.isMarried,
-                weddingDate: member.weddingDate ? new Date(member.weddingDate).toISOString().split("T")[0] : "",
-                profileImageUrl: member.profileImageUrl || "",
-                isBeliever: member.isBeliever,
-                attendedDCABasic: member.attendedDCABasic,
-                attendedDCAMerit: member.attendedDCAMerit,
-                attendedEncounter: member.attendedEncounter,
-                cellId: member.cellId || "",
-                departmentId: member.departmentId || "",
-            });
+        if (memberFromState) {
+            if (memberFromState.phone) {
+                const result = validateNigerianPhone(memberFromState.phone);
+                setIsPhoneValid(result.valid);
+                if (!result.valid) setPhoneError(result.error || null);
+            }
+            if (memberFromState.email) {
+                const result = validateEmail(memberFromState.email);
+                setIsEmailValid(result);
+                if (!result) setEmailError("Invalid email address");
+            }
         }
-    }, [member]);
+    }, [memberFromState]);
+
+    // ─── Handlers ──────────────────────────────────────────────────────────
 
     const handleChange = (field: string, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setFormData(prev => ({ ...prev, phone: value }));
+        setPhoneTouched(true);
+        
+        if (value.trim() === "") {
+            setPhoneError("Phone number is required");
+            setIsPhoneValid(false);
+            return;
+        }
+        
+        const result = validateNigerianPhone(value);
+        if (!result.valid) {
+            setPhoneError(result.error || null);
+            setIsPhoneValid(false);
+        } else {
+            setPhoneError(null);
+            setIsPhoneValid(true);
+        }
+    };
+
+    const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setFormData(prev => ({ ...prev, email: value }));
+        setEmailTouched(true);
+        
+        if (value.trim() === "") {
+            setEmailError(null);
+            setIsEmailValid(true);
+            return;
+        }
+        
+        const result = validateEmail(value);
+        if (!result) {
+            setEmailError("Invalid email address");
+            setIsEmailValid(false);
+        } else {
+            setEmailError(null);
+            setIsEmailValid(true);
+        }
+    };
+
+    const refetchMembers = async () => {
+        dispatch(
+            apiSlice.util.invalidateTags(["Members"])
+        );
+    };
+
+    // ─── Image Upload Handlers ─────────────────────────────────────────────
+
+    const handleImageUpload = async (url: string) => {
+        // Update form data with the new image URL
+        setFormData(prev => ({ ...prev, profileImageUrl: url }));
+        
+        // If editing, update the member immediately
+        if (isEdit && memberFromState) {
+            try {
+                await updateMember({ 
+                    id: memberFromState.id, 
+                    data: { profileImageUrl: url } 
+                }).unwrap();
+                toast.success('Profile image updated successfully');
+                await refetchMembers();
+            } catch (error) {
+                handleApiError(error);
+                // Revert form data on error
+                setFormData(prev => ({ ...prev, profileImageUrl: memberFromState.profileImageUrl || "" }));
+            }
+        } else {
+            toast.success('Image uploaded successfully');
+        }
+    };
+
+    const handleImageRemove = async () => {
+        // Update form data
+        setFormData(prev => ({ ...prev, profileImageUrl: "" }));
+        
+        // If editing, remove the image from the member
+        if (isEdit && memberFromState) {
+            try {
+                await updateMember({ 
+                    id: memberFromState.id, 
+                    data: { profileImageUrl: null } 
+                }).unwrap();
+                toast.success('Profile image removed');
+                await refetchMembers();
+            } catch (error) {
+                handleApiError(error);
+                // Revert form data on error
+                setFormData(prev => ({ ...prev, profileImageUrl: memberFromState.profileImageUrl || "" }));
+            }
+        } else {
+            toast.success('Image removed');
+        }
+    };
+
+    // ─── Submit Handler ────────────────────────────────────────────────────
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validate phone before submit
+        if (!formData.phone) {
+            toast.error("Phone number is required");
+            setPhoneError("Phone number is required");
+            setPhoneTouched(true);
+            return;
+        }
+
+        const phoneValidation = validateNigerianPhone(formData.phone);
+        if (!phoneValidation.valid) {
+            toast.error(phoneValidation.error || "Invalid phone number");
+            setPhoneError(phoneValidation.error || null);
+            setPhoneTouched(true);
+            return;
+        }
+
+        // Validate email if provided
+        if (formData.email) {
+            const emailValidation = validateEmail(formData.email);
+            if (!emailValidation) {
+                toast.error("Invalid email address");
+                setEmailError("Invalid email address");
+                setEmailTouched(true);
+                return;
+            }
+        }
+
         try {
+            const submitData: CreateMemberRequest = {
+                firstName: formData.firstName.trim(),
+                lastName: formData.lastName.trim(),
+                phone: phoneValidation.formatted || formData.phone,
+                isBeliever: formData.isBeliever,
+                attendedDCABasic: formData.attendedDCABasic,
+                attendedDCAMerit: formData.attendedDCAMerit,
+                attendedEncounter: formData.attendedEncounter,
+                isMarried: formData.isMarried,
+            };
+
+            // Only include optional fields if they have values
+            if (formData.email) {
+                submitData.email = formData.email.trim();
+            }
+            if (formData.gender) {
+                submitData.gender = formData.gender as Gender;
+            }
+            if (formData.homeAddress) {
+                submitData.homeAddress = formData.homeAddress;
+            }
+            if (formData.localGovernmentArea) {
+                submitData.localGovernmentArea = formData.localGovernmentArea;
+            }
+            if (formData.birthday) {
+                submitData.birthday = new Date(formData.birthday);
+            }
+            if (formData.weddingDate) {
+                submitData.weddingDate = new Date(formData.weddingDate);
+            }
+            if (formData.profileImageUrl) {
+                submitData.profileImageUrl = formData.profileImageUrl;
+            }
+            if (formData.cellId) {
+                submitData.cellId = formData.cellId;
+            }
+            if (formData.departmentId) {
+                submitData.departmentId = formData.departmentId;
+            }
+
             if (isEdit) {
-                await updateMember({ id: id!, data: formData }).unwrap();
+                await updateMember({ id: memberFromState!.id, data: submitData }).unwrap();
                 toast.success("Member updated successfully");
             } else {
-                await createMember(formData).unwrap();
+                await createMember(submitData).unwrap();
                 toast.success("Member created successfully");
             }
+
+            await refetchMembers();
             navigate("/members");
         } catch (error) {
             handleApiError(error);
         }
     };
 
-    if (isEdit && isLoadingMember) {
-        return (
-            <div className="space-y-4">
-                <Skeleton className="h-10 w-32" />
-                <Card className="p-6">
-                    <div className="space-y-4">
-                        {Array.from({ length: 6 }).map((_, i) => (
-                            <Skeleton key={i} className="h-12 w-full" />
-                        ))}
-                    </div>
-                </Card>
-            </div>
-        );
-    }
+    // ─── Loading State ─────────────────────────────────────────────────────
 
     const isLoading = isCreating || isUpdating;
+    const isFormValid = 
+        formData.firstName.trim() !== "" &&
+        formData.lastName.trim() !== "" &&
+        isPhoneValid &&
+        (formData.email === "" || isEmailValid);
 
     return (
         <div className="space-y-4 sm:space-y-6">
@@ -123,6 +292,18 @@ export default function MemberFormPage() {
                             <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
                         </div>
 
+                        {/* Profile Image Upload - Full width */}
+                        <div className="md:col-span-2 flex justify-center py-4">
+                            <ProfileImageUpload
+                                currentImageUrl={formData.profileImageUrl}
+                                onUploadSuccess={handleImageUpload}
+                                onRemove={handleImageRemove}
+                                size="lg"
+                                uploadFolder="members"
+                                disabled={isLoading}
+                            />
+                        </div>
+
                         <div className="space-y-2">
                             <Label htmlFor="firstName">First Name *</Label>
                             <Input
@@ -130,6 +311,7 @@ export default function MemberFormPage() {
                                 value={formData.firstName}
                                 onChange={(e) => handleChange("firstName", e.target.value)}
                                 required
+                                placeholder="Enter first name"
                             />
                         </div>
 
@@ -140,46 +322,96 @@ export default function MemberFormPage() {
                                 value={formData.lastName}
                                 onChange={(e) => handleChange("lastName", e.target.value)}
                                 required
+                                placeholder="Enter last name"
                             />
                         </div>
 
+                        {/* Phone - with Nigerian validation */}
                         <div className="space-y-2">
-                            <Label htmlFor="phone">Phone *</Label>
-                            <Input
-                                id="phone"
-                                value={formData.phone}
-                                onChange={(e) => handleChange("phone", e.target.value)}
-                                required
-                            />
+                            <Label htmlFor="phone">Phone Number *</Label>
+                            <div className="relative">
+                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    id="phone"
+                                    value={formData.phone}
+                                    onChange={handlePhoneChange}
+                                    onBlur={() => setPhoneTouched(true)}
+                                    required
+                                    placeholder="e.g., 08012345678 or +2348012345678"
+                                    className={`pl-10 ${phoneError && phoneTouched ? "border-red-500 focus:border-red-500 focus:ring-red-500/30" : ""} ${isPhoneValid && phoneTouched ? "border-green-500 focus:border-green-500 focus:ring-green-500/30" : ""}`}
+                                />
+                                {phoneTouched && (
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                        {isPhoneValid ? (
+                                            <CheckCircle className="h-4 w-4 text-green-500" />
+                                        ) : phoneError ? (
+                                            <XCircle className="h-4 w-4 text-red-500" />
+                                        ) : null}
+                                    </div>
+                                )}
+                            </div>
+                            {phoneError && phoneTouched && (
+                                <p className="text-xs text-red-500">{phoneError}</p>
+                            )}
+                            {isPhoneValid && phoneTouched && (
+                                <p className="text-xs text-green-600">✓ Valid Nigerian phone number</p>
+                            )}
+                            <p className="text-xs text-muted-foreground">
+                                Enter a valid Nigerian phone number (e.g., 08012345678 or +2348012345678)
+                            </p>
+                        </div>
+
+                        {/* Email - with validation */}
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email Address</Label>
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={handleEmailChange}
+                                    onBlur={() => setEmailTouched(true)}
+                                    placeholder="you@example.com"
+                                    className={`pl-10 ${emailError && emailTouched ? "border-red-500 focus:border-red-500 focus:ring-red-500/30" : ""} ${isEmailValid && emailTouched && formData.email ? "border-green-500 focus:border-green-500 focus:ring-green-500/30" : ""}`}
+                                />
+                                {emailTouched && formData.email && (
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                        {isEmailValid ? (
+                                            <CheckCircle className="h-4 w-4 text-green-500" />
+                                        ) : (
+                                            <XCircle className="h-4 w-4 text-red-500" />
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                            {emailError && emailTouched && (
+                                <p className="text-xs text-red-500">{emailError}</p>
+                            )}
+                            {isEmailValid && emailTouched && formData.email && (
+                                <p className="text-xs text-green-600">✓ Valid email address</p>
+                            )}
+                            <p className="text-xs text-muted-foreground">
+                                Optional - provide a valid email address
+                            </p>
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                value={formData.email}
-                                onChange={(e) => handleChange("email", e.target.value)}
-                            />
+                            <Label htmlFor="gender">Gender</Label>
+                            <Select
+                                value={formData.gender || "not_specified"}
+                                onValueChange={(value) => handleChange("gender", value === "not_specified" ? "" : value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select gender" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="not_specified">Not specified</SelectItem>
+                                    <SelectItem value="MALE">Male</SelectItem>
+                                    <SelectItem value="FEMALE">Female</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
-
-                        <div className="space-y-2">
-    <Label htmlFor="gender">Gender</Label>
-    <Select
-        value={formData.gender || "not_specified"}
-        onValueChange={(value) => handleChange("gender", value === "not_specified" ? "" : value)}
-    >
-        <SelectTrigger>
-            <SelectValue placeholder="Select gender" />
-        </SelectTrigger>
-        <SelectContent>
-            <SelectItem value="not_specified">Not specified</SelectItem>
-            <SelectItem value="MALE">Male</SelectItem>
-            <SelectItem value="FEMALE">Female</SelectItem>
-        </SelectContent>
-    </Select>
-</div>
-
 
                         <div className="space-y-2">
                             <Label htmlFor="birthday">Birthday</Label>
@@ -197,6 +429,7 @@ export default function MemberFormPage() {
                                 id="homeAddress"
                                 value={formData.homeAddress}
                                 onChange={(e) => handleChange("homeAddress", e.target.value)}
+                                placeholder="Enter home address"
                             />
                         </div>
 
@@ -206,6 +439,7 @@ export default function MemberFormPage() {
                                 id="localGovernmentArea"
                                 value={formData.localGovernmentArea}
                                 onChange={(e) => handleChange("localGovernmentArea", e.target.value)}
+                                placeholder="Enter LGA"
                             />
                         </div>
 
@@ -215,37 +449,36 @@ export default function MemberFormPage() {
                         </div>
 
                         <div className="space-y-2">
-    <Label htmlFor="cellId">Cell</Label>
-    <Select
-        value={formData.cellId || "none"}
-        onValueChange={(value) => handleChange("cellId", value === "none" ? "" : value)}
-    >
-        <SelectTrigger>
-            <SelectValue placeholder="Select cell" />
-        </SelectTrigger>
-        <SelectContent>
-            <SelectItem value="none">No cell</SelectItem>
-            {/* Cells will be populated from API */}
-        </SelectContent>
-    </Select>
-</div>
-
+                            <Label htmlFor="cellId">Cell</Label>
+                            <Select
+                                value={formData.cellId || "none"}
+                                onValueChange={(value) => handleChange("cellId", value === "none" ? "" : value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select cell" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">No cell</SelectItem>
+                                    {/* Cells will be populated from API */}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
                         <div className="space-y-2">
-    <Label htmlFor="departmentId">Department</Label>
-    <Select
-        value={formData.departmentId || "none"}
-        onValueChange={(value) => handleChange("departmentId", value === "none" ? "" : value)}
-    >
-        <SelectTrigger>
-            <SelectValue placeholder="Select department" />
-        </SelectTrigger>
-        <SelectContent>
-            <SelectItem value="none">No department</SelectItem>
-            {/* Departments will be populated from API */}
-        </SelectContent>
-    </Select>
-</div>
+                            <Label htmlFor="departmentId">Department</Label>
+                            <Select
+                                value={formData.departmentId || "none"}
+                                onValueChange={(value) => handleChange("departmentId", value === "none" ? "" : value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select department" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">No department</SelectItem>
+                                    {/* Departments will be populated from API */}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
                         <div className="flex items-center gap-3">
                             <Checkbox
@@ -314,7 +547,7 @@ export default function MemberFormPage() {
                         <Button variant="outline" type="button" onClick={() => navigate("/members")}>
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={isLoading}>
+                        <Button type="submit" disabled={isLoading || !isFormValid}>
                             {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                             {isEdit ? "Update Member" : "Create Member"}
                         </Button>

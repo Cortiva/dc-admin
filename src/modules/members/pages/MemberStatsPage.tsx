@@ -70,27 +70,27 @@ export default function MemberStatsPage() {
     }
 
     // Prepare chart data
-    const departmentData = stats.byDepartment?.map((d: any) => ({
+    const departmentData = stats.byDepartment?.map((d: { departmentName?: string; _count: number }) => ({
         name: d.departmentName || "Unassigned",
         value: d._count,
     })) || [];
 
-    const cellData = stats.byCell?.map((c: any) => ({
+    const cellData = stats.byCell?.map((c: { cellName?: string; _count: number }) => ({
         name: c.cellName || "Unassigned",
         value: c._count,
     })) || [];
 
-    const visitorStatusData = stats.byVisitorStatus?.map((v: any) => ({
+    const visitorStatusData = stats.byVisitorStatus?.map((v: { status: string; _count: number }) => ({
         name: v.status,
         value: v._count,
     })) || [];
 
-    const howHeardData = stats.byHowHeardAboutUs?.map((h: any) => ({
+    const howHeardData = stats.byHowHeardAboutUs?.map((h: { source: string; _count: number }) => ({
         name: h.source,
         value: h._count,
     })) || [];
 
-    const growthChartData = growthData?.map((item: any) => ({
+    const growthChartData = growthData?.map((item: { period: string; count: number }) => ({
         period: item.period,
         count: item.count,
     })) || [];
@@ -136,7 +136,7 @@ export default function MemberStatsPage() {
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
                 <KPICard
                     title="Total"
                     subtitle="All members"

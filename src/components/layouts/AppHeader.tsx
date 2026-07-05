@@ -1,19 +1,14 @@
 import {
-    // Badge,
-    // Bell,
     LogOut,
     Moon,
     PanelLeftClose,
-    // Search,
     Sun,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useTheme } from "../../provider/theme-context";
 import { useNavigate } from "react-router-dom";
-// import { useState } from "react";
 import { logout, selectCurrentUser } from "../../modules/auth/authSlice";
 import Breadcrumb from "../ui/breadcrumb";
-// import { Input } from "../ui/input";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -23,32 +18,6 @@ import {
     DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-// import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-// import { Button } from "../ui/button";
-
-// const mockNotifications = [
-//     {
-//         id: "1",
-//         title: "New Enrollment",
-//         message: "15 new student enrollments pending approval",
-//         date: "5 min ago",
-//         read: false,
-//     },
-//     {
-//         id: "2",
-//         title: "Fee Collection",
-//         message: "₦2.5M collected today across all schools",
-//         date: "1 hour ago",
-//         read: false,
-//     },
-//     {
-//         id: "3",
-//         title: "Staff Leave",
-//         message: "3 leave requests awaiting your approval",
-//         date: "3 hours ago",
-//         read: true,
-//     },
-// ];
 
 export default function AppHeader({
   collapsed,
@@ -60,35 +29,32 @@ export default function AppHeader({
   mobileOpen: boolean;
   setMobileOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === "dark";
-  const navigate = useNavigate();
-//   const [searchOpen, setSearchOpen] = useState(false);
-  const user = useSelector(selectCurrentUser);
+    const { theme, toggleTheme } = useTheme();
+    const isDark = theme === "dark";
+    const navigate = useNavigate();
+    const user = useSelector(selectCurrentUser);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
+    const handleLogout = () => {
+        logout();
+        navigate("/login");
+    };
 
-  const handleToggle = () => {
-    if (window.innerWidth < 768) {
-      setMobileOpen(true);
-    } else {
-      setCollapsed(!collapsed);
-    }
-  };
+    const handleToggle = () => {
+        if (window.innerWidth < 768) {
+            setMobileOpen(true);
+        } else {
+            setCollapsed(!collapsed);
+        }
+    };
 
-//   const unreadNotifs = mockNotifications.filter((n) => !n.read);
+    const initials = user?.firstName
+        ? user.firstName.charAt(0).toUpperCase() +
+        (user.lastName?.charAt(0).toUpperCase() || "")
+        : "AD";
 
-  const initials = user?.firstName
-    ? user.firstName.charAt(0).toUpperCase() +
-      (user.lastName?.charAt(0).toUpperCase() || "")
-    : "AD";
-
-  const fullname = user
-    ? `${user.firstName} ${user.lastName || ""}`.trim()
-    : "Admin";
+    const fullname = user
+        ? `${user.firstName} ${user.lastName || ""}`.trim()
+        : "Admin";
 
     return (
         <>
@@ -210,7 +176,7 @@ export default function AppHeader({
                                 className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-background hover:bg-background/10 border border-background transition-all"
                             >
                                 <Avatar className="h-7 w-7">
-                                    <AvatarImage src={user?.avatar || ""} />
+                                    <AvatarImage src={user?.profileImageUrl || ""} />
                                     <AvatarFallback className="text-[10px] bg-gradient-primary text-white">
                                         {initials}
                                     </AvatarFallback>

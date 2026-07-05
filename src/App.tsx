@@ -90,8 +90,9 @@ function App() {
                 <Route path="/members" element={<S><MemberListPage /></S>} />
                 <Route path="/members/stats" element={<S><MemberStatsPage /></S>} />
                 <Route path="/members/create" element={<S><MemberFormPage /></S>} />
-                <Route path="/members/:id" element={<S><MemberDetailPage /></S>} />
-                <Route path="/members/:id/edit" element={<S><MemberFormPage /></S>} />
+                <Route path="/members/view" element={<S><MemberDetailPage /></S>} />
+                <Route path="/members/edit" element={<S><MemberFormPage /></S>} />
+                <Route path="/members/promote" element={<S><MemberDetailPage /></S>} />
 
                 {/* Structure */}
                 <Route path="/structure" element={<S><AreasPage /></S>} />

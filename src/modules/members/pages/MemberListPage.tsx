@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Plus, Search, Download, Upload, MoreVertical, Eye, Edit, Trash2, UserCheck } from "lucide-react";
+import { Users, Plus, Search, Download, Upload, MoreVertical, Eye, Edit, Trash2, UserCheck, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import PageHeader from "../../../components/PageHeader";
 import { Button } from "../../../components/ui/button";
@@ -31,17 +31,41 @@ import {
 import { Skeleton } from "../../../components/ui/skeleton";
 import { useDeleteMemberMutation, useExportMembersMutation, useGetMembersQuery } from "../memberApiSlice";
 import { getInitials, handleApiError } from "../../../utils/functions";
+import { ImportLauncherDialog } from "../_components/ImportLauncherDialog";
+import { ImportReviewPanel } from "../_components/ImportReviewPanel";
+import type { Gender, MemberResponse } from "../../../types/member.type";
+import { Avatar, AvatarFallback, AvatarImage } from "../../../components/ui/avatar";
+import type { RawImportRow } from "../memberImportValidation";
+
+type ViewMode = "table" | "import-review";
+
+// Helper to securely navigate with member data
+const navigateToMember = (navigate: any, path: string, member: MemberResponse) => {
+    navigate(path, {
+        state: { 
+            member: {
+                ...member,
+                // Omit sensitive fields if needed
+                passwordHash: undefined,
+            }
+        },
+        replace: false,
+    });
+};
 
 export default function MemberListPage() {
     const navigate = useNavigate();
+    const [viewMode, setViewMode] = useState<ViewMode>("table");
+    const [pendingImportRows, setPendingImportRows] = useState<RawImportRow[]>([]);
     const [search, setSearch] = useState("");
+    const [isImportLauncherOpen, setIsImportLauncherOpen] = useState(false);
     const [filters, setFilters] = useState({
         page: 1,
         limit: 20,
         sortBy: "createdAt",
         sortOrder: "desc" as const,
         isFullMember: undefined as boolean | undefined,
-        gender: undefined as string | undefined,
+        gender: undefined as Gender | undefined,
     });
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -88,7 +112,19 @@ export default function MemberListPage() {
         }
     };
 
-    const getStatusBadge = (member: { isFullMember?: boolean; visitorStatus?: string }) => {
+    const handleSheetParsed = (rows: RawImportRow[]) => {
+        setIsImportLauncherOpen(false);
+        setPendingImportRows(rows);
+        setViewMode("import-review");
+    };
+
+    const handleImportFinished = () => {
+        setViewMode("table");
+        setPendingImportRows([]);
+        refetch();
+    };
+
+    const getStatusBadge = (member: MemberResponse) => {
         if (member.isFullMember) {
             return <Badge variant="default" className="bg-green-500">Full Member</Badge>;
         }
@@ -104,18 +140,51 @@ export default function MemberListPage() {
         return <Badge variant="outline">Visitor</Badge>;
     };
 
+    // ─── Import Review View ───────────────────────────────────────────────
+
+    if (viewMode === "import-review") {
+        return (
+            <ImportReviewPanel
+                initialRows={pendingImportRows}
+                onCancel={() => {
+                    setViewMode("table");
+                    setPendingImportRows([]);
+                }}
+                onImported={handleImportFinished}
+            />
+        );
+    }
+
+    // ─── Table View ────────────────────────────────────────────────────────
+
     return (
         <div className="space-y-4 sm:space-y-6">
-            <PageHeader
-                icon={<Users />}
-                title="Members"
-                subtitle="Manage church members and their profiles"
-                action={
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <PageHeader
+                    icon={<Users />}
+                    title="Members"
+                    subtitle="Manage church members and their profiles"
+                />
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" onClick={() => refetch()} disabled={isLoading}>
+                        <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+                    </Button>
+                    <Button variant="outline" onClick={() => setIsImportLauncherOpen(true)}>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Import
+                    </Button>
                     <Button onClick={() => navigate("/members/create")}>
                         <Plus className="w-4 h-4 mr-2" />
                         Add Member
                     </Button>
-                }
+                </div>
+            </div>
+
+            {/* Import Launcher Dialog */}
+            <ImportLauncherDialog
+                isOpen={isImportLauncherOpen}
+                onClose={() => setIsImportLauncherOpen(false)}
+                onParsed={handleSheetParsed}
             />
 
             {/* Filters */}
@@ -151,9 +220,9 @@ export default function MemberListPage() {
 
                         <Select
                             value={filters.gender || "all"}
-                            onValueChange={(value) => setFilters(prev => ({ ...prev, gender: value === "all" ? undefined : value }))}
+                            onValueChange={(value) => setFilters(prev => ({ ...prev, gender: value === "all" ? undefined : value as Gender }))}
                         >
-                            <SelectTrigger className="w-32.5">
+                            <SelectTrigger className="w-35">
                                 <SelectValue placeholder="Gender" />
                             </SelectTrigger>
                             <SelectContent>
@@ -165,9 +234,6 @@ export default function MemberListPage() {
 
                         <Button variant="outline" size="icon" onClick={handleExport}>
                             <Download className="w-4 h-4" />
-                        </Button>
-                        <Button variant="outline" size="icon">
-                            <Upload className="w-4 h-4" />
                         </Button>
                     </div>
                 </div>
@@ -214,15 +280,18 @@ export default function MemberListPage() {
                                     </td>
                                 </tr>
                             ) : (
-                                data?.members.map((member: { id: string; firstName: string; lastName: string; fullName: string; phone: string; email?: string; memberNumber: string; cellName?: string, isFullMember?: boolean; visitorStatus?: string }) => (
+                                data?.members.map((member: MemberResponse) => (
                                     <tr key={member.id} className="border-t border-muted/30 hover:bg-muted/20 transition-colors">
                                         <td className="p-3">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-medium shrink-0">
-                                                    {getInitials(member.firstName, member.lastName)}
-                                                </div>
+                                                <Avatar className="h-7 w-7">
+                                                    <AvatarImage src={member.profileImageUrl || ""} />
+                                                    <AvatarFallback className="text-[10px] bg-gradient-primary text-white">
+                                                        {getInitials(member.firstName, member.lastName)}
+                                                    </AvatarFallback>
+                                                </Avatar>
                                                 <div>
-                                                    <p className="font-medium text-sm">{member.fullName}</p>
+                                                    <p className="font-medium text-sm">{member.firstName} {member.lastName}</p>
                                                     <p className="text-xs text-muted-foreground sm:hidden">{member.phone}</p>
                                                 </div>
                                             </div>
@@ -240,16 +309,22 @@ export default function MemberListPage() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => navigate(`/members/${member.id}`)}>
+                                                    <DropdownMenuItem 
+                                                        onClick={() => navigateToMember(navigate, "/members/view", member)}
+                                                    >
                                                         <Eye className="w-4 h-4 mr-2" />
                                                         View
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => navigate(`/members/${member.id}/edit`)}>
+                                                    <DropdownMenuItem 
+                                                        onClick={() => navigateToMember(navigate, "/members/edit", member)}
+                                                    >
                                                         <Edit className="w-4 h-4 mr-2" />
                                                         Edit
                                                     </DropdownMenuItem>
                                                     {!member.isFullMember && (
-                                                        <DropdownMenuItem onClick={() => navigate(`/members/${member.id}/promote`)}>
+                                                        <DropdownMenuItem 
+                                                            onClick={() => navigateToMember(navigate, "/members/promote", member)}
+                                                        >
                                                             <UserCheck className="w-4 h-4 mr-2" />
                                                             Promote
                                                         </DropdownMenuItem>

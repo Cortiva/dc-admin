@@ -239,3 +239,46 @@ export const getGreeting = (): string => {
 
 export const getInitials = (first: string, last: string) =>
     `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();
+
+export const validateNigerianPhone = (
+    phone: string,
+): { valid: boolean; error?: string; formatted?: string } => {
+    // Remove all non-digit characters except +
+    const cleaned = phone.replace(/[^\d+]/g, "");
+
+    // Check if it's a valid Nigerian number
+    let number = cleaned;
+    if (number.startsWith("+234")) {
+        number = number.slice(4);
+    } else if (number.startsWith("234")) {
+        number = number.slice(3);
+    }
+
+    if (number.startsWith("0")) {
+        number = number.slice(1);
+    }
+
+    if (!/^\d{10}$/.test(number)) {
+        return {
+            valid: false,
+            error: "Phone number must be 10 digits (e.g., 8012345678)",
+        };
+    }
+
+    const formatted = `+234${number}`;
+    return { valid: true, formatted };
+};
+
+// Nigerian mobile: optional +234 / 234 / 0 prefix, then 10 digits starting with 7, 8, or 9
+const NG_PHONE_RE = /^(?:\+?234|0)?([789]\d{9})$/;
+
+/**
+ * Strips spaces/dashes and validates a Nigerian mobile number.
+ * Returns the normalized E.164 form (+234XXXXXXXXXX) or null if invalid.
+ */
+export function normalizeNgPhone(raw: string): string | null {
+    const cleaned = raw.trim().replace(/[\s-]/g, "");
+    const match = cleaned.match(NG_PHONE_RE);
+    if (!match) return null;
+    return `+234${match[1]}`;
+}
