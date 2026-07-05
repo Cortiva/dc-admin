@@ -2,12 +2,12 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 import { Card } from "./ui/card";
 
 interface KPICardProps {
-  title: string;
-  subtitle: string;
-  value: string;
-  change: number;
-  icon: React.ReactNode;
-  color: "green" | "blue" | "purple" | "orange";
+    title: string;
+    subtitle: string;
+    value: string;
+    change: number;
+    icon: React.ReactNode;
+    color: "green" | "blue" | "purple" | "orange" | "red" | "yellow" | "teal" | "indigo";
 }
 
 export default function KPICard({ title, subtitle, value, change, icon, color }: KPICardProps) {
@@ -16,6 +16,10 @@ export default function KPICard({ title, subtitle, value, change, icon, color }:
         blue: "bg-blue-100/10 text-blue-600",
         purple: "bg-purple-100/10 text-purple-600",
         orange: "bg-orange-100/10 text-orange-600",
+        red: "bg-red-100/10 text-red-600",
+        yellow: "bg-yellow-100/10 text-yellow-600",
+        teal: "bg-teal-100/10 text-teal-600",
+        indigo: "bg-indigo-100/10 text-indigo-600",
     };
 
     const isPositive = change > 0;

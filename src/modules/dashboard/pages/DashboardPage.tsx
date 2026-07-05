@@ -71,7 +71,7 @@ export default function DashboardPage() {
         <div className="space-y-4 sm:space-y-6">
             {/* Header */}
             <PageHeader
-                icon={<LayoutDashboard />}
+                icon={<LayoutDashboard size={33} />}
                 title="Dashboard"
                 subtitle="Overview of key metrics and system status"
                 action={

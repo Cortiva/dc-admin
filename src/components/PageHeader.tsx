@@ -14,7 +14,7 @@ export default function PageHeader({ icon, title, subtitle, action, className }:
         <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-3", className)}>
             <div className="flex items-center gap-3 min-w-0">
                 {icon && (
-                    <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
+                    <div className="px-3 py-3 rounded-md bg-primary/10 text-primary shrink-0">
                         {icon}
                     </div>
                 )}
@@ -26,7 +26,7 @@ export default function PageHeader({ icon, title, subtitle, action, className }:
                 </div>
             </div>
             {action && (
-                <div className="shrink-0">{action}</div>
+                <div className="flex rounded-full bg-card p-2">{action}</div>
             )}
         </div>
     );
