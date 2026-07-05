@@ -52,29 +52,29 @@ export default function StructureStatsPage() {
 
     // Prepare chart data
     const areaData = [
-        { name: "Total Areas", value: stats.areas.total },
-        { name: "With Leaders", value: stats.areas.withLeaders },
-        { name: "Without Leaders", value: stats.areas.withoutLeaders },
+        { name: "Total Areas", value: stats.data.areas.total },
+        { name: "With Leaders", value: stats.data.areas.withLeaders },
+        { name: "Without Leaders", value: stats.data.areas.withoutLeaders },
     ];
 
     const zoneData = [
-        { name: "Total Zones", value: stats.zones.total },
-        { name: "With Leaders", value: stats.zones.withLeaders },
-        { name: "Without Leaders", value: stats.zones.withoutLeaders },
+        { name: "Total Zones", value: stats.data.zones.total },
+        { name: "With Leaders", value: stats.data.zones.withLeaders },
+        { name: "Without Leaders", value: stats.data.zones.withoutLeaders },
     ];
 
     const cellData = [
-        { name: "Total Cells", value: stats.cells.total },
-        { name: "With Leaders", value: stats.cells.withLeaders },
-        { name: "Without Leaders", value: stats.cells.withoutLeaders },
+        { name: "Total Cells", value: stats.data.cells.total },
+        { name: "With Leaders", value: stats.data.cells.withLeaders },
+        { name: "Without Leaders", value: stats.data.cells.withoutLeaders },
     ];
 
     const memberDistribution = [
-        { name: "In Cells", value: stats.members.inCells },
-        { name: "Without Cell", value: stats.members.withoutCell },
+        { name: "In Cells", value: stats.data.members.inCells },
+        { name: "Without Cell", value: stats.data.members.withoutCell },
     ];
 
-    const leaderData = stats.leaderStats.topLeaders?.map((leader: any) => ({
+    const leaderData = stats.data.leaderStats.topLeaders?.map((leader: any) => ({
         name: leader.leaderName || "Unknown",
         roles: leader.roles,
     })) || [];
@@ -96,25 +96,25 @@ export default function StructureStatsPage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <KPICard
                     title="Areas"
-                    value={formatNumber(stats.areas.total)}
+                    value={formatNumber(stats.data.areas.total)}
                     icon={<MapPin className="w-5 h-5" />}
                     color="blue"
                 />
                 <KPICard
                     title="Zones"
-                    value={formatNumber(stats.zones.total)}
+                    value={formatNumber(stats.data.zones.total)}
                     icon={<Layers className="w-5 h-5" />}
                     color="purple"
                 />
                 <KPICard
                     title="Cells"
-                    value={formatNumber(stats.cells.total)}
+                    value={formatNumber(stats.data.cells.total)}
                     icon={<Users className="w-5 h-5" />}
                     color="green"
                 />
                 <KPICard
                     title="Total Members"
-                    value={formatNumber(stats.members.total)}
+                    value={formatNumber(stats.data.members.total)}
                     icon={<User className="w-5 h-5" />}
                     color="orange"
                 />
@@ -253,19 +253,19 @@ export default function StructureStatsPage() {
                 <h3 className="text-sm font-medium text-muted-foreground mb-4">Cell Statistics</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div className="text-center p-4 rounded-lg border border-muted/30">
-                        <p className="text-2xl font-bold text-primary">{stats.cells.averageMembers}</p>
+                        <p className="text-2xl font-bold text-primary">{stats.data.cells.averageMembers}</p>
                         <p className="text-xs text-muted-foreground">Avg Members per Cell</p>
                     </div>
                     <div className="text-center p-4 rounded-lg border border-muted/30">
-                        <p className="text-2xl font-bold text-green-500">{stats.cells.maxMembers}</p>
+                        <p className="text-2xl font-bold text-green-500">{stats.data.cells.maxMembers}</p>
                         <p className="text-xs text-muted-foreground">Max Members</p>
                     </div>
                     <div className="text-center p-4 rounded-lg border border-muted/30">
-                        <p className="text-2xl font-bold text-red-500">{stats.cells.minMembers}</p>
+                        <p className="text-2xl font-bold text-red-500">{stats.data.cells.minMembers}</p>
                         <p className="text-xs text-muted-foreground">Min Members</p>
                     </div>
                     <div className="text-center p-4 rounded-lg border border-muted/30">
-                        <p className="text-2xl font-bold text-blue-500">{stats.members.averagePerCell}</p>
+                        <p className="text-2xl font-bold text-blue-500">{stats.data.members.averagePerCell}</p>
                         <p className="text-xs text-muted-foreground">Avg Members per Cell</p>
                     </div>
                 </div>

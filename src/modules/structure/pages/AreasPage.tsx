@@ -153,7 +153,7 @@ export default function AreasPage() {
                                         <p className="text-sm">Try adjusting your search</p>
                                         <Button className="mt-4" onClick={() => navigate("/structure/areas/create")}>
                                             <Plus className="w-4 h-4 mr-2" />
-                                            Create your first area
+                                            Add area
                                         </Button>
                                     </td>
                                 </tr>

@@ -390,7 +390,7 @@ export default function ZoneDetailPage() {
                         <SelectContent>
                             {members?.members?.map((member: any) => (
                                 <SelectItem key={member.id} value={member.id}>
-                                    {member.fullName} ({member.phone})
+                                    {member.firstName} {member.lastName} - ({member.phone})
                                 </SelectItem>
                             ))}
                         </SelectContent>

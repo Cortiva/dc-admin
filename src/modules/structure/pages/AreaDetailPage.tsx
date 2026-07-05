@@ -388,7 +388,7 @@ export default function AreaDetailPage() {
                         <SelectContent>
                             {members?.members?.map((member: MemberResponse) => (
                                 <SelectItem key={member.id} value={member.id}>
-                                    {member.fullName} ({member.phone})
+                                    {member.firstName} {member.lastName} - ({member.phone})
                                 </SelectItem>
                             ))}
                         </SelectContent>

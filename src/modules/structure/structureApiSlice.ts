@@ -241,7 +241,7 @@ export const structureApiSlice = apiSlice.injectEndpoints({
 
         // ─── STATISTICS ──────────────────────────────────────────────────────
 
-        getStructureStats: builder.query<StructureStatsResponse, void>({
+        getStructureStats: builder.query<any, void>({
             query: () => ({
                 url: `/structure/stats`,
                 method: "GET",

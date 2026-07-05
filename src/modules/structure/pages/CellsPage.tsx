@@ -153,7 +153,7 @@ export default function CellsPage() {
                                         <p className="text-sm">Try adjusting your search</p>
                                         <Button className="mt-4" onClick={() => navigate("/structure/cells/create")}>
                                             <Plus className="w-4 h-4 mr-2" />
-                                            Create your first cell
+                                            Add cell
                                         </Button>
                                     </td>
                                 </tr>

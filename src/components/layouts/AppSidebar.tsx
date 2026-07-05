@@ -63,7 +63,7 @@ const buildSections = (): NavSection[] => [
         ],
     },
     {
-        label: "Church Departments",
+        label: "Church Structure",
         items: [
             {
                 title: "Departments",
@@ -74,11 +74,6 @@ const buildSections = (): NavSection[] => [
                     { title: "Statistics", url: "/departments/stats" },
                 ]
             },
-        ],
-    },
-    {
-        label: "Church Structure",
-        items: [
             {
                 title: "Areas",
                 url: "/structure",
@@ -88,7 +83,6 @@ const buildSections = (): NavSection[] => [
                     { title: "Zones", url: "/structure/zones" },
                     { title: "Cells", url: "/structure/cells" },
                     { title: "Statistics", url: "/structure/stats" },
-                    { title: "Add Area", url: "/structure/areas/create" },
                 ]
             },
         ],

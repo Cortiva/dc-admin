@@ -153,7 +153,7 @@ export default function ZonesPage() {
                                         <p className="text-sm">Try adjusting your search</p>
                                         <Button className="mt-4" onClick={() => navigate("/structure/zones/create")}>
                                             <Plus className="w-4 h-4 mr-2" />
-                                            Create your first zone
+                                            Add zone
                                         </Button>
                                     </td>
                                 </tr>
