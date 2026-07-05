@@ -96,6 +96,7 @@ export const apiSlice = createApi({
     tagTypes: [
         "Users",
         "Areas",
+        "StructureStats",
         "Zones",
         "Cells",
         "Visitors",

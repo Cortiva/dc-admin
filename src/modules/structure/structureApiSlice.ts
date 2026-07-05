@@ -1,212 +1,307 @@
 import { apiSlice } from "../../store/apiSlice";
-import type { ApiResponse, SpringPage } from "../../types/api";
 import type {
-    Area,
-    Zone,
-    Cell,
-    AreaDetail,
-    ZoneDetail,
     CreateAreaRequest,
     UpdateAreaRequest,
     CreateZoneRequest,
     UpdateZoneRequest,
     CreateCellRequest,
     UpdateCellRequest,
-    UpdateLeaderRequest,
-    StructureFilterParams,
-} from "./types/structure.types";
-
-const toQueryParams = (filters: StructureFilterParams) => ({
-    page: filters.page,
-    limit: filters.limit,
-    search: filters.search || undefined,
-});
+    StructureSearchFilters,
+    StructureListResponse,
+    AreaResponse,
+    ZoneResponse,
+    CellResponse,
+    StructureStatsResponse,
+    AssignLeaderRequest,
+    ExportStructureRequest,
+    CellTransferRequest,
+    CellTransferResponse,
+} from "../../types/structure.types";
 
 export const structureApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
-        // ── Areas ──────────────────────────────────────────────
-        fetchAreas: builder.query<
-            ApiResponse<SpringPage<Area>>,
-            StructureFilterParams
+        // ─── AREAS ───────────────────────────────────────────────────────────
+
+        getAreas: builder.query<
+            StructureListResponse<AreaResponse>,
+            StructureSearchFilters
         >({
             query: (filters) => ({
-                url: "/areas",
-                params: toQueryParams(filters),
+                url: `/structure/areas`,
+                method: "GET",
+                params: filters,
             }),
             providesTags: ["Areas"],
         }),
 
-        fetchArea: builder.query<ApiResponse<AreaDetail>, string>({
-            query: (id) => ({ url: `/areas/${id}` }),
-            providesTags: (_result, _error, id) => [{ type: "Areas", id }],
+        getAreaById: builder.query<AreaResponse, string>({
+            query: (id) => ({
+                url: `/structure/areas/${id}`,
+                method: "GET",
+            }),
+            providesTags: (result, error, id) => [{ type: "Areas", id }],
         }),
 
-        createArea: builder.mutation<ApiResponse<Area>, CreateAreaRequest>({
-            query: (data) => ({ url: `/areas`, method: "POST", body: data }),
-            invalidatesTags: ["Areas"],
+        createArea: builder.mutation<AreaResponse, CreateAreaRequest>({
+            query: (data) => ({
+                url: `/structure/areas`,
+                method: "POST",
+                body: data,
+            }),
+            invalidatesTags: ["Areas", "StructureStats"],
         }),
 
         updateArea: builder.mutation<
-            ApiResponse<Area>,
+            AreaResponse,
             { id: string; data: UpdateAreaRequest }
         >({
             query: ({ id, data }) => ({
-                url: `/areas/${id}`,
-                method: "PATCH",
+                url: `/structure/areas/${id}`,
+                method: "PUT",
                 body: data,
             }),
-            invalidatesTags: (_result, _error, { id }) => [
-                "Areas",
-                { type: "Areas", id },
-            ],
+            invalidatesTags: (result, error, { id }) => [{ type: "Areas", id }],
         }),
 
-        updateAreaLeader: builder.mutation<
-            ApiResponse<Area>,
-            { id: string; data: UpdateLeaderRequest }
+        deleteArea: builder.mutation<{ success: boolean }, string>({
+            query: (id) => ({
+                url: `/structure/areas/${id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: ["Areas", "StructureStats"],
+        }),
+
+        assignAreaLeader: builder.mutation<
+            AreaResponse,
+            { id: string; data: AssignLeaderRequest }
         >({
             query: ({ id, data }) => ({
-                url: `/areas/${id}/leader`,
-                method: "PATCH",
+                url: `/structure/areas/${id}/assign-leader`,
+                method: "POST",
                 body: data,
             }),
-            invalidatesTags: (_result, _error, { id }) => [
-                "Areas",
-                { type: "Areas", id },
-            ],
+            invalidatesTags: (result, error, { id }) => [{ type: "Areas", id }],
         }),
 
-        // ── Zones ──────────────────────────────────────────────
-        fetchZones: builder.query<
-            ApiResponse<SpringPage<Zone>>,
-            StructureFilterParams
+        removeAreaLeader: builder.mutation<AreaResponse, string>({
+            query: (id) => ({
+                url: `/structure/areas/${id}/remove-leader`,
+                method: "POST",
+            }),
+            invalidatesTags: (result, error, id) => [{ type: "Areas", id }],
+        }),
+
+        // ─── ZONES ───────────────────────────────────────────────────────────
+
+        getZones: builder.query<
+            StructureListResponse<ZoneResponse>,
+            StructureSearchFilters
         >({
             query: (filters) => ({
-                url: "/zones",
-                params: toQueryParams(filters),
+                url: `/structure/zones`,
+                method: "GET",
+                params: filters,
             }),
             providesTags: ["Zones"],
         }),
 
-        fetchZone: builder.query<ApiResponse<ZoneDetail>, string>({
-            query: (id) => ({ url: `/zones/${id}` }),
-            providesTags: (_result, _error, id) => [{ type: "Zones", id }],
+        getZoneById: builder.query<ZoneResponse, string>({
+            query: (id) => ({
+                url: `/structure/zones/${id}`,
+                method: "GET",
+            }),
+            providesTags: (result, error, id) => [{ type: "Zones", id }],
         }),
 
-        createZone: builder.mutation<ApiResponse<Zone>, CreateZoneRequest>({
-            query: (data) => ({ url: `/zones`, method: "POST", body: data }),
-            // A new zone changes its parent area's child list too, so the
-            // area detail cache (keyed by areaId) needs invalidating —
-            // not just the flat zones list.
-            invalidatesTags: (_result, _error, { areaId }) => [
-                "Zones",
-                { type: "Areas", id: areaId },
-            ],
+        createZone: builder.mutation<ZoneResponse, CreateZoneRequest>({
+            query: (data) => ({
+                url: `/structure/zones`,
+                method: "POST",
+                body: data,
+            }),
+            invalidatesTags: ["Zones", "Areas", "StructureStats"],
         }),
 
         updateZone: builder.mutation<
-            ApiResponse<Zone>,
+            ZoneResponse,
             { id: string; data: UpdateZoneRequest }
         >({
             query: ({ id, data }) => ({
-                url: `/zones/${id}`,
-                method: "PATCH",
+                url: `/structure/zones/${id}`,
+                method: "PUT",
                 body: data,
             }),
-            invalidatesTags: (_result, _error, { id }) => [
-                "Zones",
+            invalidatesTags: (result, error, { id }) => [
                 { type: "Zones", id },
+                "Areas",
             ],
         }),
 
-        updateZoneLeader: builder.mutation<
-            ApiResponse<Zone>,
-            { id: string; data: UpdateLeaderRequest }
+        deleteZone: builder.mutation<{ success: boolean }, string>({
+            query: (id) => ({
+                url: `/structure/zones/${id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: ["Zones", "Areas", "StructureStats"],
+        }),
+
+        assignZoneLeader: builder.mutation<
+            ZoneResponse,
+            { id: string; data: AssignLeaderRequest }
         >({
             query: ({ id, data }) => ({
-                url: `/zones/${id}/leader`,
-                method: "PATCH",
+                url: `/structure/zones/${id}/assign-leader`,
+                method: "POST",
                 body: data,
             }),
-            invalidatesTags: (_result, _error, { id }) => [
-                "Zones",
-                { type: "Zones", id },
-            ],
+            invalidatesTags: (result, error, { id }) => [{ type: "Zones", id }],
         }),
 
-        // ── Cells ──────────────────────────────────────────────
-        fetchCells: builder.query<
-            ApiResponse<SpringPage<Cell>>,
-            StructureFilterParams
+        removeZoneLeader: builder.mutation<ZoneResponse, string>({
+            query: (id) => ({
+                url: `/structure/zones/${id}/remove-leader`,
+                method: "POST",
+            }),
+            invalidatesTags: (result, error, id) => [{ type: "Zones", id }],
+        }),
+
+        // ─── CELLS ───────────────────────────────────────────────────────────
+
+        getCells: builder.query<
+            StructureListResponse<CellResponse>,
+            StructureSearchFilters
         >({
             query: (filters) => ({
-                url: "/cells",
-                params: toQueryParams(filters),
+                url: `/structure/cells`,
+                method: "GET",
+                params: filters,
             }),
             providesTags: ["Cells"],
         }),
 
-        fetchCell: builder.query<ApiResponse<{ cell: Cell }>, string>({
-            query: (id) => ({ url: `/cells/${id}` }),
-            providesTags: (_result, _error, id) => [{ type: "Cells", id }],
+        getCellById: builder.query<CellResponse, string>({
+            query: (id) => ({
+                url: `/structure/cells/${id}`,
+                method: "GET",
+            }),
+            providesTags: (result, error, id) => [{ type: "Cells", id }],
         }),
 
-        createCell: builder.mutation<ApiResponse<Cell>, CreateCellRequest>({
-            query: (data) => ({ url: `/cells`, method: "POST", body: data }),
-            // Same reasoning as createZone — invalidate the parent zone's
-            // detail cache so its cells list refreshes too.
-            invalidatesTags: (_result, _error, { zoneId }) => [
-                "Cells",
-                { type: "Zones", id: zoneId },
-            ],
+        createCell: builder.mutation<CellResponse, CreateCellRequest>({
+            query: (data) => ({
+                url: `/structure/cells`,
+                method: "POST",
+                body: data,
+            }),
+            invalidatesTags: ["Cells", "Zones", "Areas", "StructureStats"],
         }),
 
         updateCell: builder.mutation<
-            ApiResponse<Cell>,
+            CellResponse,
             { id: string; data: UpdateCellRequest }
         >({
             query: ({ id, data }) => ({
-                url: `/cells/${id}`,
-                method: "PATCH",
+                url: `/structure/cells/${id}`,
+                method: "PUT",
                 body: data,
             }),
-            invalidatesTags: (_result, _error, { id }) => [
-                "Cells",
+            invalidatesTags: (result, error, { id }) => [
                 { type: "Cells", id },
+                "Zones",
             ],
         }),
 
-        updateCellLeader: builder.mutation<
-            ApiResponse<Cell>,
-            { id: string; data: UpdateLeaderRequest }
+        deleteCell: builder.mutation<{ success: boolean }, string>({
+            query: (id) => ({
+                url: `/structure/cells/${id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: ["Cells", "Zones", "Areas", "StructureStats"],
+        }),
+
+        assignCellLeader: builder.mutation<
+            CellResponse,
+            { id: string; data: AssignLeaderRequest }
         >({
             query: ({ id, data }) => ({
-                url: `/cells/${id}/leader`,
-                method: "PATCH",
+                url: `/structure/cells/${id}/assign-leader`,
+                method: "POST",
                 body: data,
             }),
-            invalidatesTags: (_result, _error, { id }) => [
-                "Cells",
-                { type: "Cells", id },
-            ],
+            invalidatesTags: (result, error, { id }) => [{ type: "Cells", id }],
+        }),
+
+        removeCellLeader: builder.mutation<CellResponse, string>({
+            query: (id) => ({
+                url: `/structure/cells/${id}/remove-leader`,
+                method: "POST",
+            }),
+            invalidatesTags: (result, error, id) => [{ type: "Cells", id }],
+        }),
+
+        // ─── STATISTICS ──────────────────────────────────────────────────────
+
+        getStructureStats: builder.query<StructureStatsResponse, void>({
+            query: () => ({
+                url: `/structure/stats`,
+                method: "GET",
+            }),
+            providesTags: ["StructureStats"],
+        }),
+
+        // ─── EXPORT ──────────────────────────────────────────────────────────
+
+        exportStructure: builder.mutation<Blob, ExportStructureRequest>({
+            query: (data) => ({
+                url: `/structure/export`,
+                method: "POST",
+                body: data,
+                responseHandler: (response) => response.blob(),
+            }),
+        }),
+
+        // ─── CELL TRANSFER ──────────────────────────────────────────────────
+
+        transferMember: builder.mutation<
+            CellTransferResponse,
+            CellTransferRequest
+        >({
+            query: (data) => ({
+                url: `/structure/transfer-member`,
+                method: "POST",
+                body: data,
+            }),
+            invalidatesTags: ["Cells", "Members"],
         }),
     }),
 });
 
 export const {
-    useFetchAreasQuery,
-    useFetchAreaQuery,
+    useGetAreasQuery,
+    useGetAreaByIdQuery,
     useCreateAreaMutation,
     useUpdateAreaMutation,
-    useUpdateAreaLeaderMutation,
-    useFetchZonesQuery,
-    useFetchZoneQuery,
+    useDeleteAreaMutation,
+    useAssignAreaLeaderMutation,
+    useRemoveAreaLeaderMutation,
+
+    useGetZonesQuery,
+    useGetZoneByIdQuery,
     useCreateZoneMutation,
     useUpdateZoneMutation,
-    useUpdateZoneLeaderMutation,
-    useFetchCellsQuery,
-    useFetchCellQuery,
+    useDeleteZoneMutation,
+    useAssignZoneLeaderMutation,
+    useRemoveZoneLeaderMutation,
+
+    useGetCellsQuery,
+    useGetCellByIdQuery,
     useCreateCellMutation,
     useUpdateCellMutation,
-    useUpdateCellLeaderMutation,
+    useDeleteCellMutation,
+    useAssignCellLeaderMutation,
+    useRemoveCellLeaderMutation,
+
+    useGetStructureStatsQuery,
+    useExportStructureMutation,
+    useTransferMemberMutation,
 } = structureApiSlice;

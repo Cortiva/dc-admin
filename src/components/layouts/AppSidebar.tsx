@@ -42,12 +42,6 @@ const buildSections = (): NavSection[] => [
         ],
     },
     {
-        label: "Church Structure",
-        items: [
-            { title: "Areas, Zones & Cells", url: "/structure", icon: MapPin },
-        ],
-    },
-    {
         label: "User Management",
         items: [
             { title: "Users", url: "/users", icon: Users },
@@ -69,9 +63,8 @@ const buildSections = (): NavSection[] => [
         ],
     },
     {
-        label: "Church Structure",
+        label: "Church Departments",
         items: [
-            { title: "Areas, Zones & Cells", url: "/structure", icon: MapPin },
             {
                 title: "Departments",
                 url: "/departments",
@@ -79,6 +72,23 @@ const buildSections = (): NavSection[] => [
                 children: [
                     { title: "All Departments", url: "/departments" },
                     { title: "Statistics", url: "/departments/stats" },
+                ]
+            },
+        ],
+    },
+    {
+        label: "Church Structure",
+        items: [
+            {
+                title: "Areas",
+                url: "/structure",
+                icon: MapPin,
+                children: [
+                    { title: "All Areas", url: "/structure" },
+                    { title: "Zones", url: "/structure/zones" },
+                    { title: "Cells", url: "/structure/cells" },
+                    { title: "Statistics", url: "/structure/stats" },
+                    { title: "Add Area", url: "/structure/areas/create" },
                 ]
             },
         ],

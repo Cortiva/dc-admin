@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MapPin, Plus, Search, Download, MoreVertical, Eye, Edit, Trash2, Layers } from "lucide-react";
+import { Layers, Plus, Search, Download, MoreVertical, Eye, Edit, Trash2, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import PageHeader from "../../../components/PageHeader";
 import { Button } from "../../../components/ui/button";
@@ -22,11 +22,11 @@ import {
     DialogTitle,
 } from "../../../components/ui/dialog";
 import { Skeleton } from "../../../components/ui/skeleton";
-import { useGetAreasQuery, useDeleteAreaMutation, useExportStructureMutation } from "../structureApiSlice";
+import { useGetZonesQuery, useDeleteZoneMutation, useExportStructureMutation } from "../structureApiSlice";
 import { handleApiError } from "../../../utils/functions";
-import type { AreaResponse } from "../../../types/structure.types";
+import type { ZoneResponse } from "../../../types/structure.types";
 
-export default function AreasPage() {
+export default function ZonesPage() {
     const navigate = useNavigate();
     const [search, setSearch] = useState("");
     const [filters, setFilters] = useState({
@@ -37,14 +37,14 @@ export default function AreasPage() {
     });
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [selectedArea, setSelectedArea] = useState<AreaResponse | null>(null);
+    const [selectedZone, setSelectedZone] = useState<ZoneResponse | null>(null);
 
-    const { data, isLoading, refetch } = useGetAreasQuery({
+    const { data, isLoading, refetch } = useGetZonesQuery({
         search: search || undefined,
         ...filters,
     });
 
-    const [deleteArea] = useDeleteAreaMutation();
+    const [deleteZone] = useDeleteZoneMutation();
     const [exportStructure] = useExportStructureMutation();
 
     const handleSearch = (e: React.FormEvent) => {
@@ -53,12 +53,12 @@ export default function AreasPage() {
     };
 
     const handleDelete = async () => {
-        if (!selectedArea) return;
+        if (!selectedZone) return;
         try {
-            await deleteArea(selectedArea.id).unwrap();
-            toast.success("Area deleted successfully");
+            await deleteZone(selectedZone.id).unwrap();
+            toast.success("Zone deleted successfully");
             setDeleteDialogOpen(false);
-            setSelectedArea(null);
+            setSelectedZone(null);
             refetch();
         } catch (error) {
             handleApiError(error);
@@ -68,16 +68,16 @@ export default function AreasPage() {
     const handleExport = async () => {
         try {
             const blob = await exportStructure({
-                type: "areas",
+                type: "zones",
                 filters: { search: search || undefined },
             }).unwrap();
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.download = `areas_${new Date().toISOString().split("T")[0]}.xlsx`;
+            link.download = `zones_${new Date().toISOString().split("T")[0]}.xlsx`;
             link.click();
             window.URL.revokeObjectURL(url);
-            toast.success("Areas exported successfully");
+            toast.success("Zones exported successfully");
         } catch (error) {
             handleApiError(error);
         }
@@ -86,13 +86,13 @@ export default function AreasPage() {
     return (
         <div className="space-y-4 sm:space-y-6">
             <PageHeader
-                icon={<MapPin />}
-                title="Areas"
-                subtitle="Manage church areas and zones"
+                icon={<Layers />}
+                title="Zones"
+                subtitle="Manage church zones and cells"
                 action={
-                    <Button onClick={() => navigate("/structure/areas/create")}>
+                    <Button onClick={() => navigate("/structure/zones/create")}>
                         <Plus className="w-4 h-4 mr-2" />
-                        Add Area
+                        Add Zone
                     </Button>
                 }
             />
@@ -104,7 +104,7 @@ export default function AreasPage() {
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input
-                                placeholder="Search areas..."
+                                placeholder="Search zones..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 className="pl-9"
@@ -121,15 +121,15 @@ export default function AreasPage() {
                 </div>
             </Card>
 
-            {/* Areas Table */}
+            {/* Zones Table */}
             <Card className="overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead className="bg-muted/50">
                             <tr>
-                                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Area</th>
-                                <th className="text-left p-3 text-sm font-medium text-muted-foreground hidden md:table-cell">Description</th>
-                                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Zones</th>
+                                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Zone</th>
+                                <th className="text-left p-3 text-sm font-medium text-muted-foreground hidden md:table-cell">Area</th>
+                                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Cells</th>
                                 <th className="text-left p-3 text-sm font-medium text-muted-foreground hidden lg:table-cell">Leader</th>
                                 <th className="text-right p-3 text-sm font-medium text-muted-foreground">Actions</th>
                             </tr>
@@ -139,7 +139,7 @@ export default function AreasPage() {
                                 Array.from({ length: 5 }).map((_, i) => (
                                     <tr key={i}>
                                         <td className="p-3"><Skeleton className="h-6 w-32" /></td>
-                                        <td className="p-3 hidden md:table-cell"><Skeleton className="h-4 w-48" /></td>
+                                        <td className="p-3 hidden md:table-cell"><Skeleton className="h-4 w-24" /></td>
                                         <td className="p-3"><Skeleton className="h-6 w-12" /></td>
                                         <td className="p-3 hidden lg:table-cell"><Skeleton className="h-4 w-24" /></td>
                                         <td className="p-3 text-right"><Skeleton className="h-8 w-16 ml-auto" /></td>
@@ -148,37 +148,37 @@ export default function AreasPage() {
                             ) : data?.data.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="text-center py-12 text-muted-foreground">
-                                        <MapPin className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                                        <p className="text-lg font-medium">No areas found</p>
+                                        <Layers className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                                        <p className="text-lg font-medium">No zones found</p>
                                         <p className="text-sm">Try adjusting your search</p>
-                                        <Button className="mt-4" onClick={() => navigate("/structure/areas/create")}>
+                                        <Button className="mt-4" onClick={() => navigate("/structure/zones/create")}>
                                             <Plus className="w-4 h-4 mr-2" />
-                                            Create your first area
+                                            Create your first zone
                                         </Button>
                                     </td>
                                 </tr>
                             ) : (
-                                data?.data.map((area) => (
-                                    <tr key={area.id} className="border-t border-muted/30 hover:bg-muted/20 transition-colors">
+                                data?.data.map((zone) => (
+                                    <tr key={zone.id} className="border-t border-muted/30 hover:bg-muted/20 transition-colors">
                                         <td className="p-3">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm font-medium shrink-0">
+                                                <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center text-sm font-medium shrink-0">
                                                     <Layers className="w-4 h-4" />
                                                 </div>
-                                                <span className="font-medium text-sm">{area.name}</span>
+                                                <span className="font-medium text-sm">{zone.name}</span>
                                             </div>
                                         </td>
-                                        <td className="p-3 hidden md:table-cell text-sm text-muted-foreground truncate max-w-48">
-                                            {area.description || "—"}
+                                        <td className="p-3 hidden md:table-cell text-sm">
+                                            {zone.area?.name || "—"}
                                         </td>
                                         <td className="p-3">
                                             <Badge variant="secondary" className="gap-1">
-                                                <Layers className="w-3 h-3" />
-                                                {area._count?.zones || 0}
+                                                <MapPin className="w-3 h-3" />
+                                                {zone._count?.cells || 0}
                                             </Badge>
                                         </td>
                                         <td className="p-3 hidden lg:table-cell text-sm">
-                                            {area.leader ? `${area.leader.firstName} ${area.leader.lastName}` : "—"}
+                                            {zone.leader ? `${zone.leader.firstName} ${zone.leader.lastName}` : "—"}
                                         </td>
                                         <td className="p-3 text-right">
                                             <DropdownMenu>
@@ -188,18 +188,18 @@ export default function AreasPage() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => navigate("/structure/areas/view", { state: { area } })}>
+                                                    <DropdownMenuItem onClick={() => navigate("/structure/zones/view", { state: { zone } })}>
                                                         <Eye className="w-4 h-4 mr-2" />
                                                         View
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => navigate("/structure/areas/edit", { state: { area } })}>
+                                                    <DropdownMenuItem onClick={() => navigate("/structure/zones/edit", { state: { zone } })}>
                                                         <Edit className="w-4 h-4 mr-2" />
                                                         Edit
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
                                                         className="text-red-500"
                                                         onClick={() => {
-                                                            setSelectedArea(area);
+                                                            setSelectedZone(zone);
                                                             setDeleteDialogOpen(true);
                                                         }}
                                                     >
@@ -222,7 +222,7 @@ export default function AreasPage() {
                         <p className="text-sm text-muted-foreground">
                             Showing {((data.pagination.page - 1) * data.pagination.limit) + 1} to{" "}
                             {Math.min(data.pagination.page * data.pagination.limit, data.pagination.total)} of{" "}
-                            {data.pagination.total} areas
+                            {data.pagination.total} zones
                         </p>
                         <div className="flex gap-2">
                             <Button
@@ -253,12 +253,12 @@ export default function AreasPage() {
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Delete Area</DialogTitle>
+                        <DialogTitle>Delete Zone</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to delete "{selectedArea?.name}"? This action cannot be undone.
-                            {selectedArea?._count?.zones ? (
+                            Are you sure you want to delete "{selectedZone?.name}"? This action cannot be undone.
+                            {selectedZone?._count?.cells ? (
                                 <p className="mt-2 text-red-500">
-                                    Warning: This area has {selectedArea._count.zones} zone(s) assigned.
+                                    Warning: This zone has {selectedZone._count.cells} cell(s) assigned.
                                 </p>
                             ) : null}
                         </DialogDescription>
@@ -268,7 +268,7 @@ export default function AreasPage() {
                         <Button 
                             variant="destructive" 
                             onClick={handleDelete}
-                            disabled={selectedArea?._count?.zones ? true : false}
+                            disabled={selectedZone?._count?.cells ? true : false}
                         >
                             Delete
                         </Button>

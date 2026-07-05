@@ -13,6 +13,13 @@ import AppLayout from "./components/layouts/AppLayout";
 import PageLoader from "./components/helper/PageLoader";
 import AuthLayout from "./components/layouts/AuthLayout";
 import SelfRegisterPage from "./modules/auth/pages/SelfRegisterPage";
+import AreaFormPage from "./modules/structure/pages/AreaFormPage";
+import ZonesPage from "./modules/structure/pages/ZonesPage";
+import ZoneFormPage from "./modules/structure/pages/ZoneFormPage";
+import CellsPage from "./modules/structure/pages/CellsPage";
+import CellDetailPage from "./modules/structure/pages/CellDetailPage";
+import StructureStatsPage from "./modules/structure/pages/StructureStatsPage";
+import CellFormPage from "./modules/structure/pages/CellFormPage";
 
 // Auth
 const LoginPage = lazy(() => import("./modules/auth/pages/LoginPage"));
@@ -33,7 +40,6 @@ const MemberDetailPage = lazy(() => import("./modules/members/pages/MemberDetail
 const MemberFormPage = lazy(() => import("./modules/members/pages/MemberFormPage"));
 const MemberStatsPage = lazy(() => import("./modules/members/pages/MemberStatsPage"));
 
-// Structure
 const AreasPage = lazy(() => import("./modules/structure/pages/AreasPage"));
 const AreaDetailPage = lazy(() => import("./modules/structure/pages/AreaDetailPage"));
 const ZoneDetailPage = lazy(() => import("./modules/structure/pages/ZoneDetailPage"));
@@ -44,11 +50,10 @@ const VisitorsPage = lazy(() => import("./modules/visitors/pages/VisitorsPage"))
 // Notifications
 const NotificationsPage = lazy(() => import("./modules/notification/pages/NotificationsPage"));
 
-import DepartmentListPage from "./modules/departments/pages/DepartmentListPage";
-import DepartmentFormPage from "./modules/departments/pages/DepartmentFormPage";
-import DepartmentDetailPage from "./modules/departments/pages/DepartmentDetailPage";
-import DepartmentStatsPage from "./modules/departments/pages/DepartmentStatsPage";
-
+const DepartmentListPage = lazy(() => import( "./modules/departments/pages/DepartmentListPage"));
+const DepartmentFormPage = lazy(() => import( "./modules/departments/pages/DepartmentFormPage"));
+const DepartmentDetailPage = lazy(() => import( "./modules/departments/pages/DepartmentDetailPage"));
+const DepartmentStatsPage = lazy(() => import( "./modules/departments/pages/DepartmentStatsPage"));
 
 // Common
 const Unauthorized = lazy(() => import("./modules/Unauthorized"));
@@ -109,8 +114,21 @@ function App() {
 
               {/* Structure */}
               <Route path="/structure" element={<S><AreasPage /></S>} />
-              <Route path="/structure/areas/:areaId" element={<S><AreaDetailPage /></S>} />
-              <Route path="/structure/zones/:zoneId" element={<S><ZoneDetailPage /></S>} />
+              <Route path="/structure/areas/create" element={<S><AreaFormPage /></S>} />
+              <Route path="/structure/areas/view" element={<S><AreaDetailPage /></S>} />
+              <Route path="/structure/areas/edit" element={<S><AreaFormPage /></S>} />
+
+              <Route path="/structure/zones" element={<S><ZonesPage /></S>} />
+              <Route path="/structure/zones/create" element={<S><ZoneFormPage /></S>} />
+              <Route path="/structure/zones/view" element={<S><ZoneDetailPage /></S>} />
+              <Route path="/structure/zones/edit" element={<S><ZoneFormPage /></S>} />
+
+              <Route path="/structure/cells" element={<S><CellsPage /></S>} />
+              <Route path="/structure/cells/create" element={<S><CellFormPage /></S>} />
+              <Route path="/structure/cells/view" element={<S><CellDetailPage /></S>} />
+              <Route path="/structure/cells/edit" element={<S><CellFormPage /></S>} />
+
+              <Route path="/structure/stats" element={<S><StructureStatsPage /></S>} />
 
               {/* Visitors */}
               <Route path="/visitors" element={<S><VisitorsPage /></S>} />
