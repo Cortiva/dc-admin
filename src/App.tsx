@@ -20,6 +20,10 @@ import CellsPage from "./modules/structure/pages/CellsPage";
 import CellDetailPage from "./modules/structure/pages/CellDetailPage";
 import StructureStatsPage from "./modules/structure/pages/StructureStatsPage";
 import CellFormPage from "./modules/structure/pages/CellFormPage";
+import UserDetailPage from "./modules/users/pages/UserDetailPage";
+import UserFormPage from "./modules/users/pages/UserFormPage";
+import UserStatsPage from "./modules/users/pages/UserStatsPage";
+import UserListPage from "./modules/users/pages/UsersListPage";
 
 // Auth
 const LoginPage = lazy(() => import("./modules/auth/pages/LoginPage"));
@@ -30,9 +34,6 @@ const AcceptInvitePage = lazy(() => import("./modules/auth/pages/AcceptInvitePag
 
 // Dashboard
 const Dashboard = lazy(() => import("./modules/dashboard/pages/DashboardPage"));
-
-// Users
-const UsersPage = lazy(() => import("./modules/users/pages/UsersPage"));
 
 // Members
 const MemberListPage = lazy(() => import("./modules/members/pages/MemberListPage"));
@@ -95,7 +96,15 @@ function App() {
               <Route path="/dashboard" element={<S><Dashboard /></S>} />
 
               {/* Users */}
-              <Route path="/users" element={<S><UsersPage /></S>} />
+              <Route path="/users" element={<S><UserListPage /></S>} />
+              <Route path="/users/stats" element={<S><UserStatsPage /></S>} />
+              <Route path="/users/create" element={<S><UserFormPage /></S>} />
+              <Route path="/users/view" element={<S><UserDetailPage /></S>} />
+              <Route path="/users/edit" element={<S><UserFormPage /></S>} />
+              <Route path="/users/approve" element={<S><UserDetailPage /></S>} />
+              <Route path="/users/reject" element={<S><UserDetailPage /></S>} />
+              <Route path="/users/suspend" element={<S><UserDetailPage /></S>} />
+              <Route path="/users/activate" element={<S><UserDetailPage /></S>} />
 
               {/* Members */}
               <Route path="/members" element={<S><MemberListPage /></S>} />

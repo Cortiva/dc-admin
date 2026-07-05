@@ -1,17 +1,5 @@
-// Role a user account can hold. Matches the role enum used elsewhere
-// (RegisterRequest in authApiSlice) rather than the single-value example
-// in the invite payload, since SUPER_ADMIN was clearly just one example
-// value, not the full enum.
 export type UserRole = "SUPER_ADMIN" | "ADMIN" | "USER";
 
-// NOTE: PENDING_APPROVAL was not in the literal status list provided
-// (PENDING_INVITE, ACTIVE, REJECTED, SUSPENDED), but it's required for
-// the approve/reject flow to make sense: a self-registered user needs a
-// status to sit in *before* an admin approves or rejects them, distinct
-// from PENDING_INVITE (which is for admin-initiated invites that the
-// *user* accepts, not something an admin approves/rejects). Confirm this
-// matches your backend enum before wiring up real endpoints — if the
-// backend uses a different name for this state, swap it here only.
 export type UserStatus =
     | "PENDING_INVITE"
     | "PENDING_APPROVAL"
@@ -19,6 +7,8 @@ export type UserStatus =
     | "ACTIVE"
     | "REJECTED"
     | "SUSPENDED";
+
+export type RegistrationSource = "SELF_REGISTERED" | "INVITED";
 
 export interface User {
     id: string;

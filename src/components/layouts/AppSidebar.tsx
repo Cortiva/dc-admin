@@ -44,13 +44,16 @@ const buildSections = (): NavSection[] => [
     {
         label: "User Management",
         items: [
-            { title: "Users", url: "/users", icon: Users },
+            {
+                title: "Users",
+                url: "/users",
+                icon: Users,
+                children: [
+                    { title: "All Users", url: "/users" },
+                    { title: "Statistics", url: "/users/stats" },
+                ]
+            },
             { title: "Visitors", url: "/visitors", icon: UserPlus },
-        ],
-    },
-    {
-        label: "Members",
-        items: [
             {
                 title: "Members",
                 url: "/members",
@@ -87,12 +90,6 @@ const buildSections = (): NavSection[] => [
             },
         ],
     },
-    // {
-    //     label: "System",
-    //     items: [
-    //         { title: "Notifications", url: "/system/notifications", icon: Bell },
-    //     ],
-    // },
 ];
 
 export default function AppSidebar({
