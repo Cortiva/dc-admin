@@ -83,16 +83,16 @@ export default function SelfRegisterPage() {
         try {
             const result = await validateMemberNumber({ memberNumber }).unwrap();
             
-            if (result.valid && result.member) {
+            if (result.data.valid && result.data.member) {
                 setIsMemberValid(true);
-                setMemberInfo(result.member);
+                setMemberInfo(result.data.member);
                 setMemberNumberError(null);
                 // Pre-fill email and phone if available
-                if (result.member.email) setEmail(result.member.email);
-                if (result.member.phone) setPhone(result.member.phone);
-                toast.success(`Welcome ${result.member.firstName}! Please set your password.`);
+                if (result.data.member.email) setEmail(result.data.member.email);
+                if (result.data.member.phone) setPhone(result.data.member.phone);
+                toast.success(`Welcome ${result.data.member.firstName}! Please set your password.`);
             } else {
-                setMemberNumberError(result.message || "Invalid member number");
+                setMemberNumberError(result.data.message || "Invalid member number");
                 setIsMemberValid(false);
                 setMemberInfo(null);
             }

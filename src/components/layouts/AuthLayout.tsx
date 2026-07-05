@@ -91,9 +91,13 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             {/* Right Panel - Form */}
             <div className="flex w-full flex-col bg-background lg:w-1/2">
                 <div className="flex items-center justify-between p-6">
-                    <Link to="/" className="flex items-center gap-2 lg:hidden">
-                        <img src={isDark ? images.icon : images.icon} alt="Dominion City" width={140} />
-                    </Link>
+                    <Link to="/" className="flex items-center gap-3 lg:hidden">
+                            <img src={isDark ? images.icon : images.icon} alt="Dominion City" width={40} />
+                            <div className="flex flex-col">
+                                <h1 className="text-[25px] font-bold">Dominion City</h1>
+                                <p className="text-[10px] text-muted-foreground">Raising leaders that transform society</p>
+                            </div>
+                        </Link>
 
                     <div className="ml-auto flex items-center gap-3">
                         <button

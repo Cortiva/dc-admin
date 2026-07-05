@@ -1,6 +1,6 @@
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { AlertCircle, Info, CheckCircle, AlertTriangle } from "lucide-react";
-import { Button } from "../../../components/ui/button";
+// import { Button } from "../../../components/ui/button";
 
 interface AlertBarProps {
     alerts?: any[];
@@ -8,7 +8,7 @@ interface AlertBarProps {
 }
 
 export function AlertBar({ alerts, isLoading }: AlertBarProps) {
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
 
     if (isLoading || !alerts || alerts.length === 0) {
         return (
@@ -71,7 +71,7 @@ export function AlertBar({ alerts, isLoading }: AlertBarProps) {
                         </p>
                     </div>
                 </div>
-                {primaryAlert.action && (
+                {/* {primaryAlert.action && (
                     <Button
                         size="sm"
                         className="self-start sm:self-center shrink-0"
@@ -79,7 +79,7 @@ export function AlertBar({ alerts, isLoading }: AlertBarProps) {
                     >
                         {primaryAlert.action.label}
                     </Button>
-                )}
+                )} */}
             </div>
         </div>
     );

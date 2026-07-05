@@ -45,6 +45,15 @@ const buildSections = (): NavSection[] => [
         label: "User Management",
         items: [
             {
+                title: "Members",
+                url: "/members",
+                icon: User,
+                children: [
+                    { title: "All Members", url: "/members" },
+                    { title: "Statistics", url: "/members/stats" },
+                ],
+            },
+            {
                 title: "Users",
                 url: "/users",
                 icon: Users,
@@ -53,15 +62,14 @@ const buildSections = (): NavSection[] => [
                     { title: "Statistics", url: "/users/stats" },
                 ]
             },
-            { title: "Visitors", url: "/visitors", icon: UserPlus },
             {
-                title: "Members",
-                url: "/members",
-                icon: User,
+                title: "Visitors",
+                url: "/visitors",
+                icon: UserPlus,
                 children: [
-                    { title: "All Members", url: "/members" },
-                    { title: "Statistics", url: "/members/stats" },
-                ],
+                    { title: "All Visitors", url: "/visitors" },
+                    { title: "Check-in", url: "/visitors/check-in" },
+                ]
             },
         ],
     },

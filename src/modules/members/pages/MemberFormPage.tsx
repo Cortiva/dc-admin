@@ -11,10 +11,14 @@ import { Label } from "../../../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { useCreateMemberMutation, useUpdateMemberMutation } from "../memberApiSlice";
+import { useGetCellsQuery } from "../../structure/structureApiSlice";
+import { useGetDepartmentsQuery } from "../../departments/departmentApiSlice";
 import { handleApiError, validateEmail, validateNigerianPhone } from "../../../utils/functions";
 import type { CreateMemberRequest, Gender, MemberResponse } from "../../../types/member.type";
 import { apiSlice } from "../../../store/apiSlice";
 import { ProfileImageUpload } from "../_components/ProfileImageUpload";
+import type { DepartmentResponse } from "../../../types/department.types";
+import type { CellResponse } from "../../../types/structure.types";
 
 export default function MemberFormPage() {
     const location = useLocation();
@@ -43,6 +47,20 @@ export default function MemberFormPage() {
         attendedEncounter: memberFromState?.attendedEncounter || false,
         cellId: memberFromState?.cellId || "",
         departmentId: memberFromState?.departmentId || "",
+    });
+
+    // ─── Fetch Cells and Departments ──────────────────────────────────────
+    const { data: cellsData, isLoading: cellsLoading } = useGetCellsQuery({ 
+        limit: 100,
+        page: 1,
+    });
+    
+    const { data: departmentsData, isLoading: departmentsLoading } = useGetDepartmentsQuery({
+        limit: 100,
+        page: 1,
+        sortBy: "name",
+        sortOrder: "asc",
+        isActive: true,
     });
 
     // ─── Validation States ──────────────────────────────────────────────────
@@ -130,10 +148,8 @@ export default function MemberFormPage() {
     // ─── Image Upload Handlers ─────────────────────────────────────────────
 
     const handleImageUpload = async (url: string) => {
-        // Update form data with the new image URL
         setFormData(prev => ({ ...prev, profileImageUrl: url }));
         
-        // If editing, update the member immediately
         if (isEdit && memberFromState) {
             try {
                 await updateMember({ 
@@ -144,7 +160,6 @@ export default function MemberFormPage() {
                 await refetchMembers();
             } catch (error) {
                 handleApiError(error);
-                // Revert form data on error
                 setFormData(prev => ({ ...prev, profileImageUrl: memberFromState.profileImageUrl || "" }));
             }
         } else {
@@ -153,10 +168,8 @@ export default function MemberFormPage() {
     };
 
     const handleImageRemove = async () => {
-        // Update form data
         setFormData(prev => ({ ...prev, profileImageUrl: "" }));
         
-        // If editing, remove the image from the member
         if (isEdit && memberFromState) {
             try {
                 await updateMember({ 
@@ -167,7 +180,6 @@ export default function MemberFormPage() {
                 await refetchMembers();
             } catch (error) {
                 handleApiError(error);
-                // Revert form data on error
                 setFormData(prev => ({ ...prev, profileImageUrl: memberFromState.profileImageUrl || "" }));
             }
         } else {
@@ -180,7 +192,6 @@ export default function MemberFormPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validate phone before submit
         if (!formData.phone) {
             toast.error("Phone number is required");
             setPhoneError("Phone number is required");
@@ -196,7 +207,6 @@ export default function MemberFormPage() {
             return;
         }
 
-        // Validate email if provided
         if (formData.email) {
             const emailValidation = validateEmail(formData.email);
             if (!emailValidation) {
@@ -219,7 +229,6 @@ export default function MemberFormPage() {
                 isMarried: formData.isMarried,
             };
 
-            // Only include optional fields if they have values
             if (formData.email) {
                 submitData.email = formData.email.trim();
             }
@@ -453,15 +462,22 @@ export default function MemberFormPage() {
                             <Select
                                 value={formData.cellId || "none"}
                                 onValueChange={(value) => handleChange("cellId", value === "none" ? "" : value)}
+                                disabled={cellsLoading}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Select cell" />
+                                    <SelectValue placeholder={cellsLoading ? "Loading cells..." : "Select cell"} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="none">No cell</SelectItem>
-                                    {/* Cells will be populated from API */}
+                                    {cellsData?.data?.map((cell: CellResponse) => (
+                                        <SelectItem key={cell.id} value={cell.id}>
+                                            {cell.name}
+                                            {cell.zone?.name && ` (${cell.zone.name})`}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
+                            {cellsLoading && <p className="text-xs text-muted-foreground">Loading cells...</p>}
                         </div>
 
                         <div className="space-y-2">
@@ -469,15 +485,22 @@ export default function MemberFormPage() {
                             <Select
                                 value={formData.departmentId || "none"}
                                 onValueChange={(value) => handleChange("departmentId", value === "none" ? "" : value)}
+                                disabled={departmentsLoading}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Select department" />
+                                    <SelectValue placeholder={departmentsLoading ? "Loading departments..." : "Select department"} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="none">No department</SelectItem>
-                                    {/* Departments will be populated from API */}
+                                    {departmentsData?.departments?.map((dept: DepartmentResponse) => (
+                                        <SelectItem key={dept.id} value={dept.id}>
+                                            {dept.name}
+                                            {dept.memberCount !== undefined && ` (${dept.memberCount} members)`}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
+                            {departmentsLoading && <p className="text-xs text-muted-foreground">Loading departments...</p>}
                         </div>
 
                         <div className="flex items-center gap-3">

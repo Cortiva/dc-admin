@@ -1,26 +1,25 @@
-// modules/members/pages/MemberDetailPage.tsx
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
     ArrowLeft, Edit, User, Award, CheckCircle, XCircle, 
-    Mail, Phone, MapPin, Calendar, Users, Building2, 
-    UserCheck, UserX, Clock, Heart, MoreVertical,
-    Copy, Share2, Download
+    Mail, Phone, Users, Building2, 
+    UserCheck, UserX, Heart,
+    Copy
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate } from "date-fns";
+import { useSelector } from "react-redux";
 import PageHeader from "../../../components/PageHeader";
 import { Card } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Skeleton } from "../../../components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "../../../components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
 import { Separator } from "../../../components/ui/separator";
 import { useGetMemberByIdQuery, usePromoteMemberMutation } from "../memberApiSlice";
 import { handleApiError, getInitials } from "../../../utils/functions";
 import type { MemberResponse } from "../../../types/member.type";
+import { selectCurrentUser } from "../../auth/authSlice";
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -115,6 +114,11 @@ const CustomAvatar = ({ src, fallback, size = "lg", className = "" }: CustomAvat
 export default function MemberDetailPage() {
     const location = useLocation();
     const navigate = useNavigate();
+    
+    // Get the current logged-in user
+    const currentUser = useSelector(selectCurrentUser);
+    const actorId = currentUser?.id || "system"; // Fallback to "system" if no user found
+    
     const [promoteMember] = usePromoteMemberMutation();
     const [activeTab, setActiveTab] = useState("overview");
     
@@ -153,10 +157,17 @@ export default function MemberDetailPage() {
 
     const handlePromote = async () => {
         if (!member) return;
+        
+        // Validate that user is logged in
+        if (!actorId || actorId === "system") {
+            toast.error("You must be logged in to perform this action");
+            return;
+        }
+        
         try {
             await promoteMember({
                 memberId: member.id,
-                promotedBy: "system",
+                promotedBy: actorId, // Use the logged-in user's ID
                 notes: "Promoted to full member",
             }).unwrap();
             toast.success("Member promoted successfully");

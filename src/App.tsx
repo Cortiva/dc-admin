@@ -24,6 +24,10 @@ import UserDetailPage from "./modules/users/pages/UserDetailPage";
 import UserFormPage from "./modules/users/pages/UserFormPage";
 import UserStatsPage from "./modules/users/pages/UserStatsPage";
 import UserListPage from "./modules/users/pages/UsersListPage";
+import VisitorListPage from "./modules/visitors/pages/VisitorListPage";
+import VisitorCheckInPage from "./modules/visitors/pages/VisitorCheckInPage";
+import VisitorDetailPage from "./modules/visitors/pages/VisitorDetailPage";
+import VisitorFormPage from "./modules/visitors/pages/VisitorFormPage";
 
 // Auth
 const LoginPage = lazy(() => import("./modules/auth/pages/LoginPage"));
@@ -44,9 +48,6 @@ const MemberStatsPage = lazy(() => import("./modules/members/pages/MemberStatsPa
 const AreasPage = lazy(() => import("./modules/structure/pages/AreasPage"));
 const AreaDetailPage = lazy(() => import("./modules/structure/pages/AreaDetailPage"));
 const ZoneDetailPage = lazy(() => import("./modules/structure/pages/ZoneDetailPage"));
-
-// Visitors
-const VisitorsPage = lazy(() => import("./modules/visitors/pages/VisitorsPage"));
 
 // Notifications
 const NotificationsPage = lazy(() => import("./modules/notification/pages/NotificationsPage"));
@@ -140,7 +141,10 @@ function App() {
               <Route path="/structure/stats" element={<S><StructureStatsPage /></S>} />
 
               {/* Visitors */}
-              <Route path="/visitors" element={<S><VisitorsPage /></S>} />
+              <Route path="/visitors" element={<S><VisitorListPage /></S>} />
+              <Route path="/visitors/check-in" element={<S><VisitorCheckInPage /></S>} />
+              <Route path="/visitors/:memberId" element={<S><VisitorDetailPage /></S>} />
+              <Route path="/visitors/:memberId/edit" element={<S><VisitorFormPage /></S>} />
 
               {/* Notifications */}
               <Route path="/system/notifications" element={<S><NotificationsPage /></S>} />

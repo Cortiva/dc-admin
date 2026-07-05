@@ -1,204 +1,137 @@
 import { apiSlice } from "../../store/apiSlice";
-import type { SpringPage } from "../../types/api";
-import type { ApiResponse } from "../../types/base.type";
 import type {
-    Visitor,
-    VisitorDetail,
-    CreateVisitorRequest,
-    UpdateVisitorRequest,
-    AssignVisitorCellRequest,
+    CheckInResponse,
+    CheckInVisitorRequest,
+    ExportVisitorsRequest,
     RecordVisitRequest,
-    VisitorFilterParams,
-    VisitTrendsResponse,
-    VisitTrendsParams,
-    VisitorSummaryResponse,
-    RetentionResponse,
-    BreakdownResponse,
-    DemographicsResponse,
-    ByHierarchyResponse,
-    MetricsDateRangeParams,
-} from "./types/visitor.types";
+    UpdateVisitorProfileRequest,
+    VisitorListResponse,
+    VisitorProfileResponse,
+    VisitorSearchFilters,
+    VisitorStatsResponse,
+    VisitResponse,
+} from "../../types/visitor.types";
 
-const toQueryParams = (filters: VisitorFilterParams) => ({
-    page: filters.page,
-    limit: filters.limit,
-    search: filters.search || undefined,
-    status: filters.status || undefined,
-    serviceType: filters.serviceType || undefined,
-});
-
-export const visitorsApiSlice = apiSlice.injectEndpoints({
+export const visitorApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
-        fetchVisitors: builder.query<
-            ApiResponse<SpringPage<Visitor>>,
-            VisitorFilterParams
+        // ─── Check In ──────────────────────────────────────────────────────
+
+        checkInVisitor: builder.mutation<
+            CheckInResponse,
+            CheckInVisitorRequest
+        >({
+            query: (data) => ({
+                url: `/visitors/check-in`,
+                method: "POST",
+                body: data,
+            }),
+            invalidatesTags: ["Visitors", "VisitorMetrics", "Dashboard"],
+        }),
+
+        // ─── Record Visit ──────────────────────────────────────────────────
+
+        recordVisit: builder.mutation<
+            { visit: VisitResponse; visitor: VisitorProfileResponse },
+            RecordVisitRequest
+        >({
+            query: (data) => ({
+                url: `/visitors/record-visit`,
+                method: "POST",
+                body: data,
+            }),
+            invalidatesTags: ["Visitors", "VisitorMetrics", "Dashboard"],
+        }),
+
+        // ─── Get Visitor ──────────────────────────────────────────────────
+
+        getVisitorByMemberId: builder.query<VisitorProfileResponse, string>({
+            query: (memberId) => ({
+                url: `/visitors/${memberId}`,
+                method: "GET",
+            }),
+            providesTags: (result, error, memberId) => [
+                { type: "Visitors", id: memberId },
+            ],
+        }),
+
+        // ─── Search ─────────────────────────────────────────────────────────
+
+        searchVisitors: builder.query<
+            VisitorListResponse,
+            VisitorSearchFilters
         >({
             query: (filters) => ({
-                url: "/visitors",
-                params: toQueryParams(filters),
+                url: `/visitors/search`,
+                method: "GET",
+                params: filters,
             }),
             providesTags: ["Visitors"],
         }),
 
-        fetchVisitor: builder.query<ApiResponse<VisitorDetail>, string>({
-            query: (id) => ({ url: `/visitors/${id}` }),
-            providesTags: (_result, _error, id) => [{ type: "Visitors", id }],
-        }),
+        // ─── Update Profile ────────────────────────────────────────────────
 
-        searchVisitors: builder.query<ApiResponse<Visitor>, string>({
-            query: (q) => ({ url: "/visitors/search", params: { q } }),
-        }),
-
-        createVisitor: builder.mutation<
-            ApiResponse<Visitor>,
-            CreateVisitorRequest
+        updateVisitorProfile: builder.mutation<
+            VisitorProfileResponse,
+            { memberId: string; data: UpdateVisitorProfileRequest }
         >({
-            query: (data) => ({ url: `/visitors`, method: "POST", body: data }),
-            invalidatesTags: ["Visitors"],
+            query: ({ memberId, data }) => ({
+                url: `/visitors/${memberId}`,
+                method: "PUT",
+                body: data,
+            }),
+            invalidatesTags: (result, error, { memberId }) => [
+                { type: "Visitors", id: memberId },
+            ],
         }),
 
-        importVisitors: builder.mutation<
-            ApiResponse<{ created: number }>,
-            CreateVisitorRequest[]
-        >({
+        // ─── Stats ──────────────────────────────────────────────────────────
+
+        getVisitorStats: builder.query<VisitorStatsResponse, void>({
+            query: () => ({
+                url: `/visitors/stats`,
+                method: "GET",
+            }),
+            providesTags: ["VisitorMetrics"],
+        }),
+
+        getVisitorFunnel: builder.query<any[], void>({
+            query: () => ({
+                url: `/visitors/funnel`,
+                method: "GET",
+            }),
+            providesTags: ["VisitorMetrics"],
+        }),
+
+        getInactiveVisitors: builder.query<any[], { days?: number }>({
+            query: (params) => ({
+                url: `/visitors/inactive`,
+                method: "GET",
+                params,
+            }),
+            providesTags: ["Visitors"],
+        }),
+
+        // ─── Export ─────────────────────────────────────────────────────────
+
+        exportVisitors: builder.mutation<Blob, ExportVisitorsRequest>({
             query: (data) => ({
-                url: `/visitors/bulk`,
+                url: `/visitors/export`,
                 method: "POST",
                 body: data,
+                responseHandler: (response) => response.blob(),
             }),
-            invalidatesTags: ["Visitors"],
-        }),
-
-        updateVisitor: builder.mutation<
-            ApiResponse<Visitor>,
-            { id: string; data: UpdateVisitorRequest }
-        >({
-            query: ({ id, data }) => ({
-                url: `/visitors/${id}`,
-                method: "PATCH",
-                body: data,
-            }),
-            invalidatesTags: (_result, _error, { id }) => [
-                "Visitors",
-                { type: "Visitors", id },
-            ],
-        }),
-
-        assignVisitorCell: builder.mutation<
-            ApiResponse<Visitor>,
-            { id: string; data: AssignVisitorCellRequest }
-        >({
-            query: ({ id, data }) => ({
-                url: `/visitors/${id}/cell`,
-                method: "PATCH",
-                body: data,
-            }),
-            invalidatesTags: (_result, _error, { id }) => [
-                "Visitors",
-                { type: "Visitors", id },
-            ],
-        }),
-
-        recordVisitorVisit: builder.mutation<
-            ApiResponse<VisitorDetail>,
-            { id: string; data: RecordVisitRequest }
-        >({
-            query: ({ id, data }) => ({
-                url: `/visitors/${id}/visits`,
-                method: "POST",
-                body: data,
-            }),
-            invalidatesTags: (_result, _error, { id }) => [
-                "Visitors",
-                { type: "Visitors", id },
-            ],
-        }),
-
-        // ── Metrics ────────────────────────────────────────────
-        fetchVisitTrends: builder.query<
-            ApiResponse<VisitTrendsResponse>,
-            VisitTrendsParams
-        >({
-            query: (params) => ({
-                url: `/metrics/visitors/visit-trends`,
-                params,
-            }),
-            providesTags: ["VisitorMetrics"],
-        }),
-
-        fetchVisitorSummary: builder.query<
-            ApiResponse<VisitorSummaryResponse>,
-            MetricsDateRangeParams
-        >({
-            query: (params) => ({ url: `/metrics/visitors/summary`, params }),
-            providesTags: ["VisitorMetrics"],
-        }),
-
-        fetchVisitorRetention: builder.query<
-            ApiResponse<RetentionResponse>,
-            MetricsDateRangeParams
-        >({
-            query: (params) => ({ url: `/metrics/visitors/retention`, params }),
-            providesTags: ["VisitorMetrics"],
-        }),
-
-        fetchVisitorLikedMost: builder.query<
-            ApiResponse<BreakdownResponse>,
-            MetricsDateRangeParams
-        >({
-            query: (params) => ({
-                url: `/metrics/visitors/liked-most`,
-                params,
-            }),
-            providesTags: ["VisitorMetrics"],
-        }),
-
-        fetchVisitorHowHeard: builder.query<
-            ApiResponse<BreakdownResponse>,
-            MetricsDateRangeParams
-        >({
-            query: (params) => ({ url: `/metrics/visitors/how-heard`, params }),
-            providesTags: ["VisitorMetrics"],
-        }),
-
-        fetchVisitorDemographics: builder.query<
-            ApiResponse<DemographicsResponse>,
-            MetricsDateRangeParams
-        >({
-            query: (params) => ({
-                url: `/metrics/visitors/demographics`,
-                params,
-            }),
-            providesTags: ["VisitorMetrics"],
-        }),
-
-        fetchVisitorsByHierarchy: builder.query<
-            ApiResponse<ByHierarchyResponse>,
-            MetricsDateRangeParams
-        >({
-            query: (params) => ({
-                url: `/metrics/visitors/by-hierarchy`,
-                params,
-            }),
-            providesTags: ["VisitorMetrics"],
         }),
     }),
 });
 
 export const {
-    useFetchVisitorsQuery,
-    useFetchVisitorQuery,
+    useCheckInVisitorMutation,
+    useRecordVisitMutation,
+    useGetVisitorByMemberIdQuery,
     useSearchVisitorsQuery,
-    useCreateVisitorMutation,
-    useImportVisitorsMutation,
-    useUpdateVisitorMutation,
-    useAssignVisitorCellMutation,
-    useRecordVisitorVisitMutation,
-    useFetchVisitTrendsQuery,
-    useFetchVisitorSummaryQuery,
-    useFetchVisitorRetentionQuery,
-    useFetchVisitorLikedMostQuery,
-    useFetchVisitorHowHeardQuery,
-    useFetchVisitorDemographicsQuery,
-    useFetchVisitorsByHierarchyQuery,
-} = visitorsApiSlice;
+    useUpdateVisitorProfileMutation,
+    useGetVisitorStatsQuery,
+    useGetVisitorFunnelQuery,
+    useGetInactiveVisitorsQuery,
+    useExportVisitorsMutation,
+} = visitorApiSlice;

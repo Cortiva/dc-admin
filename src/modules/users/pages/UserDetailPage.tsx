@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate } from "date-fns";
+import { useSelector } from "react-redux";
 import PageHeader from "../../../components/PageHeader";
 import { Card } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
@@ -24,6 +25,7 @@ import type { UserResponse } from "../../../types/user.types";
 import { useActivateUserMutation, useApproveUserMutation, useDeactivateUserMutation, useGetUserByIdQuery, useRejectUserMutation, useSuspendUserMutation } from "../usersApiSlice";
 import { getInitials, handleApiError } from "../../../utils/functions";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../../../components/ui/dialog";
+import { selectCurrentUser } from "../../auth/authSlice";
 
 interface InfoItemProps {
     label: string;
@@ -44,6 +46,10 @@ const InfoItem = ({ label, value, icon }: InfoItemProps) => (
 export default function UserDetailPage() {
     const location = useLocation();
     const navigate = useNavigate();
+    
+    // Get the current logged-in user
+    const currentUser = useSelector(selectCurrentUser);
+    const actorId = currentUser?.id || "system"; // Fallback to "system" if no user found
     
     const [user, setUser] = useState<UserResponse | undefined>(location.state?.user || undefined);
     const [isLoading, setIsLoading] = useState(!user);
@@ -82,7 +88,13 @@ export default function UserDetailPage() {
         if (!user) return;
         try {
             let result;
-            const actorId = "system";
+            
+            // Use the logged-in user's ID
+            if (!actorId || actorId === "system") {
+                toast.error("You must be logged in to perform this action");
+                return;
+            }
+            
             switch (action) {
                 case "approve":
                     result = await approveUser({ id: user.id, data: { approvedById: actorId } }).unwrap();
@@ -163,7 +175,7 @@ export default function UserDetailPage() {
                     <PageHeader
                         icon={<User />}
                         title={`${user.firstName} ${user.lastName}`}
-                        subtitle={`Member #${user.member?.id || user.memberId}`}
+                        subtitle={user.registrationSource}
                     />
                 </div>
                 <div className="flex gap-2 flex-wrap">
@@ -283,11 +295,6 @@ export default function UserDetailPage() {
                             <InfoItem label="Registration" value={user.registrationSource} icon={<Shield className="w-4 h-4" />} />
                             <InfoItem label="Email Verified" value={user.emailVerifiedAt ? formatDate(new Date(user.emailVerifiedAt), "PPP") : "No"} icon={<CheckCircle className="w-4 h-4" />} />
                             <InfoItem label="Last Login" value={user.lastLoginAt ? formatDate(new Date(user.lastLoginAt), "PPP") : "Never"} icon={<Clock className="w-4 h-4" />} />
-                        </div>
-
-                        <div className="mt-4 pt-4 border-t border-muted/30">
-                            <p className="text-xs text-muted-foreground">Member ID</p>
-                            <p className="text-sm font-medium">{user.memberId}</p>
                         </div>
                     </Card>
                 </div>

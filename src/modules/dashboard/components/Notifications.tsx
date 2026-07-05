@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, CheckCircle, AlertCircle, ChevronRight } from "lucide-react";
+import { Bell, CheckCircle, AlertCircle } from "lucide-react";
 import { Card } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 
@@ -13,7 +13,7 @@ interface Notification {
         label: string;
         url: string;
     };
-    createdAt: Date;
+    createdAt: Date | string; // Allow both Date and string
 }
 
 interface NotificationsProps {
@@ -35,9 +35,17 @@ const getNotificationIcon = (type: Notification['type']) => {
     }
 };
 
-const getTimeAgo = (date: Date) => {
+const getTimeAgo = (date: Date | string) => {
+    // Convert to Date if it's a string
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    // Check if date is valid
+    if (isNaN(dateObj.getTime())) {
+        return 'Invalid date';
+    }
+    
     const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
+    const diffMs = now.getTime() - dateObj.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
@@ -46,7 +54,7 @@ const getTimeAgo = (date: Date) => {
     if (diffMins < 60) return `${diffMins} min ago`;
     if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
     if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-    return date.toLocaleDateString();
+    return dateObj.toLocaleDateString();
 };
 
 export function Notifications({ alerts }: NotificationsProps) {
@@ -137,7 +145,7 @@ export function Notifications({ alerts }: NotificationsProps) {
                                 </div>
 
                                 {/* Action Link */}
-                                {alert.action && (
+                                {/* {alert.action && (
                                     <div className="mt-2">
                                         <button
                                             className="text-xs text-primary hover:underline inline-flex items-center gap-1"
@@ -150,7 +158,7 @@ export function Notifications({ alerts }: NotificationsProps) {
                                             <ChevronRight className="w-3 h-3" />
                                         </button>
                                     </div>
-                                )}
+                                )} */}
                             </div>
                         </div>
                     ))
