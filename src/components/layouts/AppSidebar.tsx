@@ -1,10 +1,9 @@
 import {
     LayoutDashboard, Users,
-    // BarChart3,
     LogOut, ChevronDown, ChevronRight,
     UserPlus,
-    // Bell,
     MapPin,
+    User,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -15,20 +14,31 @@ import { useTheme } from "../../provider/theme-context";
 import images from "../../utils/images";
 
 type NavItem = {
-    title:     string;
-    url:       string;
-    icon:      React.ElementType;
-    badge?:    number;
-    roles?:    string[];
-    children?: NavItem[];
+    title: string;
+    url: string;
+    icon: React.ElementType;
+    badge?: number;
+    roles?: string[];
+    children?: ChildNavItem[];
 };
 
-type NavSection = { label: string; items: NavItem[] };
+type ChildNavItem = {
+    title: string;
+    url: string;
+    icon?: React.ElementType;
+};
+
+type NavSection = {
+    label: string;
+    items: NavItem[];
+};
 
 const buildSections = (): NavSection[] => [
     {
         label: "Main",
-        items: [{ title: "Dashboard", url: "/dashboard", icon: LayoutDashboard }],
+        items: [
+            { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+        ],
     },
     {
         label: "Church Structure",
@@ -43,17 +53,24 @@ const buildSections = (): NavSection[] => [
             { title: "Visitors", url: "/visitors", icon: UserPlus },
         ],
     },
-    // {
-    //     label: "Analytics",
-    //     items: [
-    //         { title: "Reports & Insights", url: "/analytics", icon: BarChart3 },
-    //     ],
-    // },
-
+    {
+        label: "Members",
+        items: [
+            {
+                title: "Members",
+                url: "/members",
+                icon: User,
+                children: [
+                    { title: "All Members", url: "/members" },
+                    { title: "Statistics", url: "/members/stats" },
+                    { title: "Add Member", url: "/members/create" },
+                ],
+            },
+        ],
+    },
     // {
     //     label: "System",
     //     items: [
-    //         // { title: "Audit Logs", url: "/system/audit", icon: ShieldAlert },
     //         { title: "Notifications", url: "/system/notifications", icon: Bell },
     //     ],
     // },
@@ -68,10 +85,10 @@ export default function AppSidebar({
     const location = useLocation();
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const user     = useSelector(selectCurrentUser);
-    const role     = user?.role ?? "";
+    const user = useSelector(selectCurrentUser);
+    const role = user?.role ?? "";
     const { theme } = useTheme();
-    const isDark    = theme === "dark";
+    const isDark = theme === "dark";
 
     const sections = buildSections();
 
@@ -79,7 +96,10 @@ export default function AppSidebar({
     const isItemActive = (item: NavItem): boolean => {
         if (location.pathname === item.url) return true;
         if (item.children) {
-            return item.children.some(child => location.pathname === child.url || location.pathname.startsWith(child.url + "/"));
+            return item.children.some(child => 
+                location.pathname === child.url || 
+                location.pathname.startsWith(child.url + "/")
+            );
         }
         return false;
     };
@@ -88,7 +108,6 @@ export default function AppSidebar({
     const getExpandedState = () => {
         const expandedState: Record<string, boolean> = {};
         
-        // Check each section's items
         sections.forEach(section => {
             section.items.forEach(item => {
                 if (item.children && isItemActive(item)) {
@@ -100,28 +119,30 @@ export default function AppSidebar({
         return expandedState;
     };
 
-    // Update expanded state when location changes
     const [expanded, setExpanded] = useState<Record<string, boolean>>(getExpandedState());
 
     const isActive = (url: string) => {
         const current = location.pathname === "/" ? "/dashboard" : location.pathname;
         if (url === "/dashboard") return current === "/dashboard";
-        if (url === "/analytics") return current === "/analytics";
         return current === url || current.startsWith(url + "/");
     };
 
     const isActiveSection = (items: NavItem[]): boolean =>
         items.some((item) =>
-            isActive(item.url) || (item.children ?? []).some((c) => isActive(c.url)),
+            isActive(item.url) || (item.children ?? []).some((c) => isActive(c.url))
         );
 
-    const handleLogout = () => { dispatch(logout()); navigate("/login"); };
+    const handleLogout = () => { 
+        dispatch(logout()); 
+        navigate("/login"); 
+    };
 
     const handleNavClick = (item: NavItem) => {
         if (item.children) {
-            if (collapsed) { 
-                navigate(item.url); 
-            } else { 
+            if (collapsed) {
+                // If collapsed, navigate to the first child
+                navigate(item.children[0].url);
+            } else {
                 // Toggle the clicked menu
                 setExpanded((prev) => ({ ...prev, [item.url]: !prev[item.url] }));
             }
@@ -131,15 +152,23 @@ export default function AppSidebar({
         }
     };
 
+    const handleChildClick = (url: string) => {
+        navigate(url);
+        setMobileOpen(false);
+    };
+
     const filteredSections = sections
-        .map((s) => ({ ...s, items: s.items.filter((i) => !i.roles || i.roles.includes(role)) }))
+        .map((s) => ({ 
+            ...s, 
+            items: s.items.filter((i) => !i.roles || i.roles.includes(role)) 
+        }))
         .filter((s) => s.items.length > 0);
 
     const renderItem = (item: NavItem, depth = 0) => {
-        const active  = isActive(item.url);
-        const Icon    = item.icon;
+        const active = isActive(item.url);
+        const Icon = item.icon;
         const hasKids = !!item.children?.length;
-        const isOpen  = expanded[item.url];
+        const isOpen = expanded[item.url];
 
         return (
             <div key={item.url}>
@@ -186,7 +215,30 @@ export default function AppSidebar({
 
                 {hasKids && isOpen && !collapsed && (
                     <div className="mt-0.5 space-y-0.5">
-                        {item.children!.map((child) => renderItem(child, depth + 1))}
+                        {item.children!.map((child) => (
+                            <button
+                                key={child.url}
+                                onClick={() => handleChildClick(child.url)}
+                                className={`
+                                    relative flex items-center gap-3 px-3 py-2 rounded-sm w-full
+                                    transition-all duration-200 group cursor-pointer pl-7
+                                    ${location.pathname === child.url
+                                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
+                                    }
+                                `}
+                            >
+                                {location.pathname === child.url && (
+                                    <span className="absolute left-0 top-0 h-full w-1 rounded-r bg-primary" />
+                                )}
+                                {child.icon && (
+                                    <child.icon className="h-4 w-4 shrink-0 transition-colors" />
+                                )}
+                                <span className="flex-1 text-left truncate text-xs">
+                                    {child.title}
+                                </span>
+                            </button>
+                        ))}
                     </div>
                 )}
             </div>
@@ -205,20 +257,20 @@ export default function AppSidebar({
             <div className="h-full flex flex-col">
                 {/* Logo */}
                 <SidebarHeader className="p-3 border-b border-sidebar-border">
-                <div className="flex items-center gap-2.5 px-1 py-0.5">
-                  {collapsed ? (
-                    <img src={isDark ? images.icon : images.icon} alt="logo" width={35} />
-                  ) : (
-                    <Link to="/" className="flex items-center gap-3">
-                        <img src={isDark ? images.icon : images.icon} alt="Dominion City" width={35} />
-                        <div className="flex flex-col">
-                            <h1 className="text-[17px] font-bold">Dominion City</h1>
-                            <p className="text-[14px] text-muted-foreground">Surulere</p>
-                        </div>
-                    </Link>
-                  )}
-                </div>
-              </SidebarHeader>
+                    <div className="flex items-center gap-2.5 px-1 py-0.5">
+                        {collapsed ? (
+                            <img src={isDark ? images.icon : images.icon} alt="logo" width={35} />
+                        ) : (
+                            <Link to="/" className="flex items-center gap-3">
+                                <img src={isDark ? images.icon : images.icon} alt="Dominion City" width={35} />
+                                <div className="flex flex-col">
+                                    <h1 className="text-[17px] font-bold">Dominion City</h1>
+                                    <p className="text-[14px] text-muted-foreground">Surulere</p>
+                                </div>
+                            </Link>
+                        )}
+                    </div>
+                </SidebarHeader>
 
                 {/* Menu */}
                 <div className="flex-1 overflow-y-auto px-2 py-3 space-y-4">

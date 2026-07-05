@@ -236,3 +236,6 @@ export const getGreeting = (): string => {
     if (hour < 17) return "Good Afternoon";
     return "Good Evening";
 };
+
+export const getInitials = (first: string, last: string) =>
+    `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();

@@ -5,9 +5,9 @@ interface KPICardProps {
     title: string;
     subtitle: string;
     value: string;
-    change: number;
+    change?: number;
     icon: React.ReactNode;
-    color: "green" | "blue" | "purple" | "orange" | "red" | "yellow" | "teal" | "indigo";
+    color: "green" | "blue" | "purple" | "orange" | "red" | "yellow" | "teal" | "indigo" | "pink";
 }
 
 export default function KPICard({ title, subtitle, value, change, icon, color }: KPICardProps) {
@@ -20,9 +20,10 @@ export default function KPICard({ title, subtitle, value, change, icon, color }:
         yellow: "bg-yellow-100/10 text-yellow-600",
         teal: "bg-teal-100/10 text-teal-600",
         indigo: "bg-indigo-100/10 text-indigo-600",
+        pink: "bg-pink-100/10 text-pink-600",
     };
 
-    const isPositive = change > 0;
+    const isPositive = change !== undefined && change > 0;
 
     return (
         <Card className="bg-card rounded-xl shadow-sm border border-muted-card p-4 sm:p-3">
@@ -36,10 +37,12 @@ export default function KPICard({ title, subtitle, value, change, icon, color }:
                         <p className="text-xs sm:text-[13px] text-muted-foreground truncate">{subtitle}</p>
                     </div>
                 </div>
-                <div className={`flex items-center gap-1 text-xs sm:text-[13px] shrink-0 ${isPositive ? "text-green-600" : "text-red-600"}`}>
-                    {isPositive ? <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" /> : <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5" />}
-                    <span className="font-medium">{Math.abs(change)}%</span>
-                </div>
+                {change !== undefined && (
+                    <div className={`flex items-center gap-1 text-xs sm:text-[13px] shrink-0 ${isPositive ? "text-green-600" : "text-red-600"}`}>
+                        {isPositive ? <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" /> : <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5" />}
+                        <span className="font-medium">{Math.abs(change)}%</span>
+                    </div>
+                )}
             </div>
             <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold truncate">{value}</h3>
         </Card>
