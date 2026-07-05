@@ -5,6 +5,7 @@ import {
     MapPin,
     User,
     Building2,
+    Bell,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -68,7 +69,7 @@ const buildSections = (): NavSection[] => [
                 icon: UserPlus,
                 children: [
                     { title: "All Visitors", url: "/visitors" },
-                    { title: "Check-in", url: "/visitors/check-in" },
+                    // { title: "Check-in", url: "/visitors/check-in" },
                 ]
             },
         ],
@@ -95,6 +96,16 @@ const buildSections = (): NavSection[] => [
                     { title: "Cells", url: "/structure/cells" },
                     { title: "Statistics", url: "/structure/stats" },
                 ]
+            },
+        ],
+    },
+    {
+        label: "System",
+        items: [
+            {
+                title: "Notifications",
+                url: "/system/notifications",
+                icon: Bell,// You can pass the unread count here
             },
         ],
     },

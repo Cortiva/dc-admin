@@ -1,48 +1,42 @@
-export interface Notification {
-    id: number;
+export interface NotificationResponse {
+    id: string;
     title: string;
-    message: string;
-    type:
-        | "success"
-        | "info"
-        | "warning"
-        | "event"
-        | "member"
-        | "visitor"
-        | "training"
-        | "birthday"
-        | "system";
-    timestamp: string;
-    isRead: boolean;
-    icon?: React.ReactNode;
-    actionLink?: string;
-    actionLabel?: string;
-    metadata?: {
-        userId?: number;
-        visitorId?: number;
-        eventId?: number;
-        trainingId?: number;
-    };
+    body: string;
+    channel: any;
+    status: any;
+    data: Record<string, unknown> | null;
+    readAt: Date | null;
+    createdAt: Date;
 }
 
-export interface NotificationFilterParams {
+export interface NotificationListResponse {
+    data: NotificationResponse[];
+    total: number;
     page: number;
     limit: number;
-    type?: string;
-    isRead?: boolean;
-    search?: string;
-    startDate?: string;
-    endDate?: string;
+    totalPages: number;
+    unreadCount: number;
 }
 
-export interface NotificationState {
-    notifications: Notification[];
-    unreadCount: number;
-    isLoading: boolean;
-    pagination: {
-        page: number;
-        limit: number;
-        total: number;
-        totalPages: number;
-    };
+export interface NotificationListQuery {
+    page?: number;
+    limit?: number;
+    unreadOnly?: boolean;
+}
+
+export interface BroadcastRequest {
+    title: string;
+    body: string;
+    channel: any;
+    segment: "ALL" | "ADMIN" | "SUPER_ADMIN" | "CUSTOM";
+    data?: Record<string, unknown>;
+}
+
+export interface UnreadCountResponse {
+    count: number;
+}
+
+export interface MarkReadResponse {
+    success: boolean;
+    message: string;
 }

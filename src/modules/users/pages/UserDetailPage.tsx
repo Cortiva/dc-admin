@@ -6,7 +6,7 @@ import {
     UserCheck, UserX, MoreVertical
 } from "lucide-react";
 import { toast } from "sonner";
-import { formatDate } from "date-fns";
+import { format } from "date-fns";
 import { useSelector } from "react-redux";
 import PageHeader from "../../../components/PageHeader";
 import { Card } from "../../../components/ui/card";
@@ -22,7 +22,14 @@ import {
     DropdownMenuTrigger,
 } from "../../../components/ui/dropdown-menu";
 import type { UserResponse } from "../../../types/user.types";
-import { useActivateUserMutation, useApproveUserMutation, useDeactivateUserMutation, useGetUserByIdQuery, useRejectUserMutation, useSuspendUserMutation } from "../usersApiSlice";
+import { 
+    useActivateUserMutation, 
+    useApproveUserMutation, 
+    useDeactivateUserMutation, 
+    useGetUserByIdQuery, 
+    useRejectUserMutation, 
+    useSuspendUserMutation 
+} from "../usersApiSlice";
 import { getInitials, handleApiError } from "../../../utils/functions";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../../../components/ui/dialog";
 import { selectCurrentUser } from "../../auth/authSlice";
@@ -43,13 +50,45 @@ const InfoItem = ({ label, value, icon }: InfoItemProps) => (
     </div>
 );
 
+// ─── Helper function for safe date formatting ──────────────────────────────
+
+const safeFormatDate = (date: string | Date | null | undefined, formatStr: string = "PPP"): string => {
+    if (!date) return "—";
+    
+    try {
+        const dateObj = typeof date === 'string' ? new Date(date) : date;
+        if (isNaN(dateObj.getTime())) {
+            return "—";
+        }
+        return format(dateObj, formatStr);
+    } catch (error) {
+        console.error("Error formatting date:", error);
+        return "—";
+    }
+};
+
+const safeFormatMonthYear = (date: string | Date | null | undefined): string => {
+    if (!date) return "—";
+    
+    try {
+        const dateObj = typeof date === 'string' ? new Date(date) : date;
+        if (isNaN(dateObj.getTime())) {
+            return "—";
+        }
+        return format(dateObj, "MMM yyyy");
+    } catch (error) {
+        console.error("Error formatting date:", error);
+        return "—";
+    }
+};
+
 export default function UserDetailPage() {
     const location = useLocation();
     const navigate = useNavigate();
     
     // Get the current logged-in user
     const currentUser = useSelector(selectCurrentUser);
-    const actorId = currentUser?.id || "system"; // Fallback to "system" if no user found
+    const actorId = currentUser?.id || "system";
     
     const [user, setUser] = useState<UserResponse | undefined>(location.state?.user || undefined);
     const [isLoading, setIsLoading] = useState(!user);
@@ -86,39 +125,60 @@ export default function UserDetailPage() {
 
     const handleAction = async (action: string) => {
         if (!user) return;
+        
+        if (!actorId || actorId === "system") {
+            toast.error("You must be logged in to perform this action");
+            return;
+        }
+        
         try {
             let result;
             
-            // Use the logged-in user's ID
-            if (!actorId || actorId === "system") {
-                toast.error("You must be logged in to perform this action");
-                return;
-            }
-            
             switch (action) {
                 case "approve":
-                    result = await approveUser({ id: user.id, data: { approvedById: actorId } }).unwrap();
+                    result = await approveUser({ 
+                        id: user.id, 
+                        data: { approvedById: actorId } 
+                    }).unwrap();
                     toast.success("User approved successfully");
                     break;
                 case "reject":
-                    result = await rejectUser({ id: user.id, data: { rejectedById: actorId, reason: "Rejected by admin" } }).unwrap();
+                    result = await rejectUser({ 
+                        id: user.id, 
+                        data: { rejectedById: actorId, reason: "Rejected by admin" } 
+                    }).unwrap();
                     toast.success("User rejected successfully");
                     break;
                 case "suspend":
-                    result = await suspendUser({ id: user.id, data: { suspendedById: actorId, reason: "Suspended by admin" } }).unwrap();
+                    result = await suspendUser({ 
+                        id: user.id, 
+                        data: { suspendedById: actorId, reason: "Suspended by admin" } 
+                    }).unwrap();
                     toast.success("User suspended successfully");
                     break;
                 case "activate":
-                    result = await activateUser({ id: user.id, activatedById: actorId }).unwrap();
+                    result = await activateUser({ 
+                        id: user.id, 
+                        activatedById: actorId 
+                    }).unwrap();
                     toast.success("User activated successfully");
                     break;
                 case "deactivate":
-                    result = await deactivateUser({ id: user.id, deactivatedById: actorId, reason: "Deactivated by admin" }).unwrap();
+                    result = await deactivateUser({ 
+                        id: user.id, 
+                        deactivatedById: actorId, 
+                        reason: "Deactivated by admin" 
+                    }).unwrap();
                     toast.success("User deactivated successfully");
                     break;
+                default:
+                    return;
             }
+            
             setUser(result);
             setActionDialog({ open: false, type: "" });
+            navigate("/users");
+            
         } catch (error) {
             handleApiError(error);
         }
@@ -175,15 +235,22 @@ export default function UserDetailPage() {
                     <PageHeader
                         icon={<User />}
                         title={`${user.firstName} ${user.lastName}`}
-                        subtitle={user.registrationSource}
+                        subtitle={user.registrationSource || "User"}
                     />
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                    <Button variant="outline" size="sm" onClick={() => navigator.clipboard?.writeText(user.id)}>
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => navigator.clipboard?.writeText(user.id)}
+                    >
                         <Copy className="w-4 h-4 mr-2" />
                         Copy ID
                     </Button>
-                    <Button variant="outline" onClick={() => navigate("/users/edit", { state: { user } })}>
+                    <Button 
+                        variant="outline" 
+                        onClick={() => navigate("/users/edit", { state: { user } })}
+                    >
                         <Edit className="w-4 h-4 mr-2" />
                         Edit
                     </Button>
@@ -234,14 +301,18 @@ export default function UserDetailPage() {
             <Dialog open={actionDialog.open} onOpenChange={(open) => setActionDialog({ ...actionDialog, open })}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>{actionDialog.type.charAt(0).toUpperCase() + actionDialog.type.slice(1)} User</DialogTitle>
+                        <DialogTitle>
+                            {actionDialog.type.charAt(0).toUpperCase() + actionDialog.type.slice(1)} User
+                        </DialogTitle>
                         <DialogDescription>
                             Are you sure you want to {actionDialog.type} "{user.firstName} {user.lastName}"?
                             {actionDialog.type === "delete" && " This action cannot be undone."}
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setActionDialog({ open: false, type: "" })}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setActionDialog({ open: false, type: "" })}>
+                            Cancel
+                        </Button>
                         <Button 
                             variant={actionDialog.type === "reject" || actionDialog.type === "deactivate" ? "destructive" : "default"}
                             onClick={() => handleAction(actionDialog.type)}
@@ -274,7 +345,7 @@ export default function UserDetailPage() {
                             <div className="mt-3 flex flex-wrap justify-center gap-2">
                                 <Badge variant="secondary" className="text-xs">
                                     <Clock className="w-3 h-3 mr-1" />
-                                    Joined {formatDate(new Date(user.createdAt), "MMM yyyy")}
+                                    Joined {safeFormatMonthYear(user.createdAt)}
                                 </Badge>
                                 {user.emailVerifiedAt && (
                                     <Badge variant="secondary" className="text-xs">
@@ -288,13 +359,41 @@ export default function UserDetailPage() {
                         <Separator className="my-4" />
 
                         <div className="text-left space-y-1">
-                            <InfoItem label="Email" value={user.email || "Not provided"} icon={<Mail className="w-4 h-4" />} />
-                            <InfoItem label="Phone" value={user.phone} icon={<Phone className="w-4 h-4" />} />
-                            <InfoItem label="Gender" value={user.gender || "Not specified"} icon={<User className="w-4 h-4" />} />
-                            <InfoItem label="Member" value={user.isFullMember ? "Full Member" : "Visitor"} icon={<UserCheck className="w-4 h-4" />} />
-                            <InfoItem label="Registration" value={user.registrationSource} icon={<Shield className="w-4 h-4" />} />
-                            <InfoItem label="Email Verified" value={user.emailVerifiedAt ? formatDate(new Date(user.emailVerifiedAt), "PPP") : "No"} icon={<CheckCircle className="w-4 h-4" />} />
-                            <InfoItem label="Last Login" value={user.lastLoginAt ? formatDate(new Date(user.lastLoginAt), "PPP") : "Never"} icon={<Clock className="w-4 h-4" />} />
+                            <InfoItem 
+                                label="Email" 
+                                value={user.email || "Not provided"} 
+                                icon={<Mail className="w-4 h-4" />} 
+                            />
+                            <InfoItem 
+                                label="Phone" 
+                                value={user.phone} 
+                                icon={<Phone className="w-4 h-4" />} 
+                            />
+                            <InfoItem 
+                                label="Gender" 
+                                value={user.gender || "Not specified"} 
+                                icon={<User className="w-4 h-4" />} 
+                            />
+                            <InfoItem 
+                                label="Member" 
+                                value={user.isFullMember ? "Full Member" : "Visitor"} 
+                                icon={<UserCheck className="w-4 h-4" />} 
+                            />
+                            <InfoItem 
+                                label="Registration" 
+                                value={user.registrationSource || "Unknown"} 
+                                icon={<Shield className="w-4 h-4" />} 
+                            />
+                            <InfoItem 
+                                label="Email Verified" 
+                                value={safeFormatDate(user.emailVerifiedAt)} 
+                                icon={<CheckCircle className="w-4 h-4" />} 
+                            />
+                            <InfoItem 
+                                label="Last Login" 
+                                value={safeFormatDate(user.lastLoginAt)} 
+                                icon={<Clock className="w-4 h-4" />} 
+                            />
                         </div>
                     </Card>
                 </div>
@@ -308,14 +407,20 @@ export default function UserDetailPage() {
                             <InfoItem label="Full Name" value={`${user.firstName} ${user.lastName}`} />
                             <InfoItem label="Role" value={user.role} />
                             <InfoItem label="Status" value={user.status} />
-                            <InfoItem label="Registration Source" value={user.registrationSource} />
-                            <InfoItem label="Created" value={formatDate(new Date(user.createdAt), "PPP")} />
-                            <InfoItem label="Updated" value={formatDate(new Date(user.updatedAt), "PPP")} />
+                            <InfoItem label="Registration Source" value={user.registrationSource || "Unknown"} />
+                            <InfoItem label="Created" value={safeFormatDate(user.createdAt)} />
+                            <InfoItem label="Updated" value={safeFormatDate(user.updatedAt)} />
                             {user.invitedBy && (
-                                <InfoItem label="Invited By" value={`${user.invitedBy.firstName} ${user.invitedBy.lastName}`} />
+                                <InfoItem 
+                                    label="Invited By" 
+                                    value={`${user.invitedBy.firstName} ${user.invitedBy.lastName}`} 
+                                />
                             )}
                             {user.approvedBy && (
-                                <InfoItem label="Approved By" value={`${user.approvedBy.firstName} ${user.approvedBy.lastName}`} />
+                                <InfoItem 
+                                    label="Approved By" 
+                                    value={`${user.approvedBy.firstName} ${user.approvedBy.lastName}`} 
+                                />
                             )}
                         </div>
                     </Card>

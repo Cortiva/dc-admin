@@ -1,403 +1,369 @@
-"use client";
-
-import { useState, useMemo } from "react";
-import {
-    Bell,
-    RefreshCw,
-    CheckCheck,
-    ChevronLeft,
-    ChevronRight,
-    Search,
-    Inbox,
-    Calendar,
-    Users,
-    Star,
-    Award,
-    Gift,
-    AlertCircle,
-    CheckCircle,
-} from "lucide-react";
-import PageHeader from "../../../components/PageHeader";
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import { Badge } from "../../../components/ui/badge";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "../../../components/ui/select";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-} from "../../../components/ui/card";
-import type { Notification, NotificationFilterParams } from "../../../types/notification.type";
-import { getPaginatedNotifications, getUnreadCount, markAllAsRead, markAsRead } from "../../../mock/mock-notifications";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { 
+    Bell, CheckCheck, Trash2, 
+    CheckCircle, Info, 
+    ChevronLeft, ChevronRight,
+    Mail, Phone, MessageSquare, 
+    Filter, X
+} from "lucide-react";
+import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
+import PageHeader from "../../../components/PageHeader";
+import { Card } from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
+import { Skeleton } from "../../../components/ui/skeleton";
+import { handleApiError } from "../../../utils/functions";
+import { useDeleteNotificationMutation, useGetNotificationsQuery, useGetUnreadCountQuery, useMarkAllAsReadMutation, useMarkAsReadMutation } from "../notificationApiSlice";
+import type { NotificationResponse } from "../../../types/notification.type";
+
+
+const getTypeIcon = (channel: string) => {
+    switch (channel) {
+        case "IN_APP":
+            return <Bell className="w-5 h-5 text-blue-500" />;
+        case "EMAIL":
+            return <Mail className="w-5 h-5 text-purple-500" />;
+        case "SMS":
+            return <MessageSquare className="w-5 h-5 text-green-500" />;
+        case "PUSH":
+            return <Phone className="w-5 h-5 text-orange-500" />;
+        default:
+            return <Bell className="w-5 h-5 text-muted-foreground" />;
+    }
+};
+
+const getTimeAgo = (date: Date) => {
+    try {
+        return formatDistanceToNow(new Date(date), { addSuffix: true });
+    } catch {
+        return "Some time ago";
+    }
+};
 
 export default function NotificationsPage() {
-    const [filters, setFilters] = useState<NotificationFilterParams>({
-        page: 1,
-        limit: 20,
-        type: undefined,
-        isRead: undefined,
-        search: "",
-    });
-    const [selectedNotifications, setSelectedNotifications] = useState<number[]>([]);
-
     const navigate = useNavigate();
+    const [page, setPage] = useState(1);
+    const [limit] = useState(20);
+    const [unreadOnly, setUnreadOnly] = useState(false);
+    const [selectedNotifications, setSelectedNotifications] = useState<Set<string>>(new Set());
 
-    const [, forceRefresh] = useState(0);
+    const { data, isLoading, refetch } = useGetNotificationsQuery({ 
+        page, 
+        limit, 
+        unreadOnly 
+    });
+    
+    const { data: unreadCountData, refetch: refetchUnread } = useGetUnreadCountQuery({ page, limit });
 
-    const unreadCount = useMemo(() => {
-        return getUnreadCount();
-    }, [forceRefresh]);
+    const [markAsRead] = useMarkAsReadMutation();
+    const [markAllAsRead] = useMarkAllAsReadMutation();
+    const [deleteNotification] = useDeleteNotificationMutation();
 
-    const notificationsResult = useMemo(() => {
-        return getPaginatedNotifications(filters.page, filters.limit, {
-            page: filters.page,
-            limit: filters.limit,
-            type: filters.type,
-            isRead: filters.isRead,
-            search: filters.search,
-        });
-    }, [filters, forceRefresh]);
-
-    const notifications = notificationsResult.notifications;
-
-    const pagination = {
-        page: filters.page,
-        limit: filters.limit,
-        total: notificationsResult.total,
-        totalPages: notificationsResult.totalPages,
+    const handleMarkAsRead = async (id: string) => {
+        try {
+            await markAsRead(id).unwrap();
+            toast.success("Notification marked as read");
+            refetch();
+            refetchUnread();
+        } catch (error) {
+            handleApiError(error);
+        }
     };
 
-    const handleMarkAsRead = (id: number) => {
-        markAsRead(id);
-        forceRefresh(prev => prev + 1);
+    const handleMarkAllAsRead = async () => {
+        try {
+            await markAllAsRead().unwrap();
+            toast.success("All notifications marked as read");
+            refetch();
+            refetchUnread();
+        } catch (error) {
+            handleApiError(error);
+        }
     };
 
-    const handleMarkAllAsRead = () => {
-        markAllAsRead();
-        forceRefresh(prev => prev + 1);
+    const handleDelete = async (id: string) => {
+        try {
+            await deleteNotification(id).unwrap();
+            toast.success("Notification deleted");
+            refetch();
+            refetchUnread();
+        } catch (error) {
+            handleApiError(error);
+        }
     };
 
-    const handleSelectAll = () => {
-        if (selectedNotifications.length === notifications.length) {
-            setSelectedNotifications([]);
+    const toggleSelect = (id: string) => {
+        const newSet = new Set(selectedNotifications);
+        if (newSet.has(id)) {
+            newSet.delete(id);
         } else {
-            setSelectedNotifications(notifications.map(n => n.id));
+            newSet.add(id);
+        }
+        setSelectedNotifications(newSet);
+    };
+
+    const handleBulkMarkAsRead = async () => {
+        for (const id of selectedNotifications) {
+            await handleMarkAsRead(id);
+        }
+        setSelectedNotifications(new Set());
+    };
+
+    const handleBulkDelete = async () => {
+        for (const id of selectedNotifications) {
+            await handleDelete(id);
+        }
+        setSelectedNotifications(new Set());
+    };
+
+    const handleNextPage = () => {
+        if (data && page < data.totalPages) {
+            setPage(page + 1);
+            window.scrollTo({ top: 0, behavior: "smooth" });
         }
     };
 
-    const handleSelectNotification = (id: number) => {
-        setSelectedNotifications(prev =>
-            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    const handlePrevPage = () => {
+        if (page > 1) {
+            setPage(page - 1);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="space-y-4 sm:space-y-6">
+                <PageHeader icon={<Bell />} title="Notifications" subtitle="Stay updated with your notifications" />
+                <div className="space-y-3">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                        <Card key={i} className="p-4">
+                            <div className="flex items-start gap-4">
+                                <Skeleton className="h-10 w-10 rounded-full" />
+                                <div className="flex-1 space-y-2">
+                                    <Skeleton className="h-4 w-3/4" />
+                                    <Skeleton className="h-3 w-1/2" />
+                                </div>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
+            </div>
         );
-    };
+    }
 
-    const handleBulkMarkAsRead = () => {
-        selectedNotifications.forEach(id => markAsRead(id));
-
-        setSelectedNotifications([]);
-        forceRefresh(prev => prev + 1);
-    };
-
-    const handleNotificationClick = (notification: Notification) => {
-        if (!notification.isRead) {
-            handleMarkAsRead(notification.id);
-        }
-        if (notification.actionLink) {
-            navigate(notification.actionLink);
-        }
-    };
-
-    const getTypeIcon = (type: Notification['type']) => {
-        switch (type) {
-            case 'member': return <Users className="w-4 h-4" />;
-            case 'visitor': return <Star className="w-4 h-4" />;
-            case 'training': return <Award className="w-4 h-4" />;
-            case 'event': return <Calendar className="w-4 h-4" />;
-            case 'birthday': return <Gift className="w-4 h-4" />;
-            case 'warning': return <AlertCircle className="w-4 h-4" />;
-            case 'success': return <CheckCircle className="w-4 h-4" />;
-            default: return <Bell className="w-4 h-4" />;
-        }
-    };
-
-    const getTypeColor = (type: Notification['type']) => {
-        switch (type) {
-            case 'member': return "bg-green-100 text-green-800";
-            case 'visitor': return "bg-blue-100 text-blue-800";
-            case 'training': return "bg-orange-100 text-orange-800";
-            case 'event': return "bg-purple-100 text-purple-800";
-            case 'birthday': return "bg-pink-100 text-pink-800";
-            case 'warning': return "bg-yellow-100 text-yellow-800";
-            case 'success': return "bg-emerald-100 text-emerald-800";
-            default: return "bg-gray-100 text-gray-800";
-        }
-    };
-
-    const getTimeAgo = (timestamp: string) => {
-        const now = new Date();
-        const then = new Date(timestamp);
-        const diffMs = now.getTime() - then.getTime();
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMins / 60);
-        const diffDays = Math.floor(diffHours / 24);
-
-        if (diffMins < 1) return 'Just now';
-        if (diffMins < 60) return `${diffMins} min ago`;
-        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-        if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-        return then.toLocaleDateString();
-    };
+    const notifications = data?.data.data || [];
+    const unreadCount = unreadCountData?.data.count || 0;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <PageHeader
                     icon={<Bell />}
                     title="Notifications"
-                    subtitle={`You have ${unreadCount} unread notifications`}
+                    subtitle={`${unreadCount} unread`}
                 />
-                <div className="flex items-center gap-3">
-                    {selectedNotifications.length > 0 && (
-                        <Button variant="outline" onClick={handleBulkMarkAsRead}>
+                <div className="flex gap-2">
+                    {unreadCount > 0 && (
+                        <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>
                             <CheckCheck className="w-4 h-4 mr-2" />
-                            Mark Selected ({selectedNotifications.length})
+                            Mark All Read
                         </Button>
                     )}
-                    <Button variant="outline" onClick={handleMarkAllAsRead}>
-                        <CheckCheck className="w-4 h-4 mr-2" />
-                        Mark All as Read
-                    </Button>
-                    <Button variant="outline" onClick={() => forceRefresh(prev => prev + 1)}>
-                        <RefreshCw className="w-4 h-4" />
+                    <Button
+                        variant={unreadOnly ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setUnreadOnly(!unreadOnly)}
+                    >
+                        <Filter className="w-4 h-4 mr-2" />
+                        {unreadOnly ? "All" : "Unread Only"}
                     </Button>
                 </div>
             </div>
 
-            {/* Filters */}
-            <Card>
-                <CardContent className="pt-6">
-                    <div className="flex flex-wrap gap-4">
-                        <div className="flex-1 min-w-50">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Search notifications..."
-                                    value={filters.search}
-                                    onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }))}
-                                    className="pl-9"
-                                />
-                            </div>
-                        </div>
-
-                        <Select
-                            value={filters.type || "all"}
-                            onValueChange={(value) => setFilters(prev => ({
-                                ...prev,
-                                type: value === "all" ? undefined : value,
-                                page: 1
-                            }))}
-                        >
-                            <SelectTrigger className="w-40">
-                                <SelectValue placeholder="All Types" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Types</SelectItem>
-                                <SelectItem value="member">Members</SelectItem>
-                                <SelectItem value="visitor">Visitors</SelectItem>
-                                <SelectItem value="training">Training</SelectItem>
-                                <SelectItem value="event">Events</SelectItem>
-                                <SelectItem value="birthday">Birthdays</SelectItem>
-                                <SelectItem value="system">System</SelectItem>
-                            </SelectContent>
-                        </Select>
-
-                        <Select
-                            value={filters.isRead === undefined ? "all" : filters.isRead ? "read" : "unread"}
-                            onValueChange={(value) => setFilters(prev => ({
-                                ...prev,
-                                isRead: value === "all" ? undefined : value === "read",
-                                page: 1
-                            }))}
-                        >
-                            <SelectTrigger className="w-40">
-                                <SelectValue placeholder="All Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Status</SelectItem>
-                                <SelectItem value="unread">Unread</SelectItem>
-                                <SelectItem value="read">Read</SelectItem>
-                            </SelectContent>
-                        </Select>
-
-                        <Select
-                            value={filters.limit.toString()}
-                            onValueChange={(value) => setFilters(prev => ({ ...prev, limit: parseInt(value), page: 1 }))}
-                        >
-                            <SelectTrigger className="w-32">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="10">10 per page</SelectItem>
-                                <SelectItem value="20">20 per page</SelectItem>
-                                <SelectItem value="50">50 per page</SelectItem>
-                                <SelectItem value="100">100 per page</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Notifications List */}
-            <Card>
-                <CardHeader className="border-b border-muted-card">
+            {/* Bulk Actions */}
+            {selectedNotifications.size > 0 && (
+                <Card className="p-3 bg-primary/5 border-primary/20">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={handleSelectAll}
-                            >
-                                {selectedNotifications.length === notifications.length && notifications.length > 0
-                                    ? "Deselect All"
-                                    : "Select All"}
+                        <span className="text-sm font-medium">
+                            {selectedNotifications.size} selected
+                        </span>
+                        <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={handleBulkMarkAsRead}>
+                                <CheckCheck className="w-4 h-4 mr-2" />
+                                Mark Read
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={handleBulkDelete}>
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => setSelectedNotifications(new Set())}>
+                                <X className="w-4 h-4" />
                             </Button>
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                            {pagination.total} notifications total
-                        </div>
                     </div>
-                </CardHeader>
+                </Card>
+            )}
 
-                <CardContent className="p-0">
-                    {notifications.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-12 text-center">
-                            <Inbox className="w-12 h-12 text-muted-foreground mb-3" />
-                            <p className="text-muted-foreground">No notifications found</p>
-                            <p className="text-sm text-muted-foreground mt-1">
-                                Try adjusting your filters
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="divide-y divide-muted-card">
-                            {notifications.map((notification) => (
-                                <div
-                                    key={notification.id}
-                                    className={`
-                                            relative p-4 transition-colors cursor-pointer
-                                            hover:bg-muted/30
-                                            ${!notification.isRead ? 'bg-primary/5' : ''}
-                                        `}
-                                    onClick={() => handleNotificationClick(notification)}
-                                >
-                                    <div className="flex items-start gap-4">
-                                        {/* Checkbox */}
-                                        <div className="shrink-0 pt-1">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedNotifications.includes(notification.id)}
-                                                onChange={() => handleSelectNotification(notification.id)}
-                                                onClick={(e) => e.stopPropagation()}
-                                                className="rounded border-muted-card"
-                                            />
-                                        </div>
+            {/* Notifications List */}
+            {notifications.length === 0 ? (
+                <Card className="p-12 text-center">
+                    <div className="flex flex-col items-center">
+                        <Bell className="w-16 h-16 text-muted-foreground opacity-50 mb-4" />
+                        <h3 className="text-lg font-semibold text-foreground mb-2">No Notifications</h3>
+                        <p className="text-sm text-muted-foreground">
+                            {unreadOnly ? "You have no unread notifications" : "You're all caught up!"}
+                        </p>
+                    </div>
+                </Card>
+            ) : (
+                <div className="space-y-2">
+                    {notifications.map((notification: NotificationResponse) => {
+                        const isRead = notification.readAt !== null;
+                        return (
+                            <Card 
+                                key={notification.id}
+                                className={`p-4 hover:bg-muted/20 transition-colors cursor-pointer ${
+                                    !isRead ? "border-l-4 border-l-primary" : ""
+                                }`}
+                                onClick={() => {
+                                    if (!isRead) {
+                                        handleMarkAsRead(notification.id);
+                                    }
+                                }}
+                            >
+                                <div className="flex items-start gap-4">
+                                    {/* Select Checkbox */}
+                                    <div className="flex items-center mt-1">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedNotifications.has(notification.id)}
+                                            onChange={(e) => {
+                                                e.stopPropagation();
+                                                toggleSelect(notification.id);
+                                            }}
+                                            className="h-4 w-4 rounded border-border text-primary focus:ring-primary/30"
+                                        />
+                                    </div>
 
-                                        {/* Icon */}
-                                        <div className="shrink-0">
-                                            <div className={`p-2 rounded-lg ${getTypeColor(notification.type)}`}>
-                                                {getTypeIcon(notification.type)}
-                                            </div>
-                                        </div>
-
-                                        {/* Content */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-start justify-between gap-2">
-                                                <div>
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <p className={`font-medium ${!notification.isRead ? 'text-primary' : ''}`}>
-                                                            {notification.title}
-                                                        </p>
-                                                        <Badge className={getTypeColor(notification.type)}>
-                                                            {notification.type}
-                                                        </Badge>
-                                                    </div>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        {notification.message}
-                                                    </p>
-                                                    {notification.actionLabel && (
-                                                        <div className="mt-2 flex items-center gap-1 text-xs text-primary">
-                                                            <span>{notification.actionLabel}</span>
-                                                            <ChevronRight className="w-3 h-3" />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="shrink-0 text-right">
-                                                    <p className="text-xs text-muted-foreground whitespace-nowrap">
-                                                        {getTimeAgo(notification.timestamp)}
-                                                    </p>
-                                                    {!notification.isRead && (
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleMarkAsRead(notification.id);
-                                                            }}
-                                                            className="text-xs text-primary hover:underline mt-1"
-                                                        >
-                                                            Mark as read
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
+                                    {/* Icon */}
+                                    <div className="shrink-0">
+                                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                            {getTypeIcon(notification.channel)}
                                         </div>
                                     </div>
 
-                                    {/* Unread indicator */}
-                                    {!notification.isRead && (
-                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </CardContent>
+                                    {/* Content */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div>
+                                                <p className={`text-sm font-medium ${!isRead ? "text-foreground" : "text-muted-foreground"}`}>
+                                                    {notification.title}
+                                                </p>
+                                                <p className="text-sm text-muted-foreground mt-1">
+                                                    {notification.body}
+                                                </p>
+                                            </div>
+                                            <div className="flex flex-col items-end gap-1 shrink-0">
+                                                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                                    {getTimeAgo(notification.createdAt)}
+                                                </span>
+                                                {!isRead && (
+                                                    <Badge variant="default" className="text-[10px] bg-primary/20 text-primary">
+                                                        New
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                        </div>
 
-                {/* Pagination */}
-                {pagination.totalPages > 1 && (
-                    <div className="flex items-center justify-between p-4 border-t border-muted-card">
-                        <div className="text-sm text-muted-foreground">
-                            Showing {((pagination.page - 1) * pagination.limit) + 1} to{' '}
-                            {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
-                        </div>
-                        <div className="flex gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setFilters(prev => ({ ...prev, page: prev.page - 1 }))}
-                                disabled={pagination.page === 1}
-                            >
-                                <ChevronLeft className="w-4 h-4" />
-                                Previous
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setFilters(prev => ({ ...prev, page: prev.page + 1 }))}
-                                disabled={pagination.page === pagination.totalPages}
-                            >
-                                Next
-                                <ChevronRight className="w-4 h-4" />
-                            </Button>
-                        </div>
+                                        {/* Actions */}
+                                        <div className="flex items-center gap-2 mt-2">
+                                            {!isRead && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-7 text-xs text-primary hover:text-primary/80"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleMarkAsRead(notification.id);
+                                                    }}
+                                                >
+                                                    <CheckCircle className="w-3 h-3 mr-1" />
+                                                    Mark Read
+                                                </Button>
+                                            )}
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-7 text-xs text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDelete(notification.id);
+                                                }}
+                                            >
+                                                <Trash2 className="w-3 h-3 mr-1" />
+                                                Delete
+                                            </Button>
+                                            {notification.data && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-7 text-xs"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        // Navigate to the data link if present
+                                                        if (notification.data?.link) {
+                                                            navigate(notification.data.link as string);
+                                                        }
+                                                    }}
+                                                >
+                                                    <Info className="w-3 h-3 mr-1" />
+                                                    View Details
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </Card>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* Pagination */}
+            {data && data.totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-muted/30">
+                    <p className="text-sm text-muted-foreground">
+                        Showing {((data.page - 1) * data.limit) + 1} to{" "}
+                        {Math.min(data.page * data.limit, data.total)} of {data.total} notifications
+                    </p>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={data.page === 1}
+                            onClick={handlePrevPage}
+                        >
+                            <ChevronLeft className="w-4 h-4 mr-1" />
+                            Previous
+                        </Button>
+                        <span className="flex items-center px-3 text-sm">
+                            Page {data.page} of {data.totalPages}
+                        </span>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={data.page === data.totalPages}
+                            onClick={handleNextPage}
+                        >
+                            Next
+                            <ChevronRight className="w-4 h-4 ml-1" />
+                        </Button>
                     </div>
-                )}
-            </Card>
+                </div>
+            )}
         </div>
     );
 }
