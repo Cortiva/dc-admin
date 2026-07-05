@@ -102,5 +102,6 @@ export const apiSlice = createApi({
         "VisitorMetrics",
         "Dashboard",
         "Members",
+        "Departments",
     ],
 });

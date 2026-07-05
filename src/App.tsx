@@ -44,6 +44,12 @@ const VisitorsPage = lazy(() => import("./modules/visitors/pages/VisitorsPage"))
 // Notifications
 const NotificationsPage = lazy(() => import("./modules/notification/pages/NotificationsPage"));
 
+import DepartmentListPage from "./modules/departments/pages/DepartmentListPage";
+import DepartmentFormPage from "./modules/departments/pages/DepartmentFormPage";
+import DepartmentDetailPage from "./modules/departments/pages/DepartmentDetailPage";
+import DepartmentStatsPage from "./modules/departments/pages/DepartmentStatsPage";
+
+
 // Common
 const Unauthorized = lazy(() => import("./modules/Unauthorized"));
 const NotFound = lazy(() => import("./modules/NotFound"));
@@ -63,55 +69,62 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-            <ToastContainer position="bottom-center" autoClose={5000} className="bg-card text-foreground" />
-            <Sonner />
-            <Routes>
-              {/* ─── AUTH ROUTES (only accessible when NOT logged in) ─── */}
-              <Route element={<RedirectIfAuthenticated />}>
-                <Route path="login" element={<AuthLayout><S><LoginPage /></S></AuthLayout>} />
-                <Route path="forgot-password" element={<AuthLayout><S><ForgotPassword /></S></AuthLayout>} />
-                <Route path="verify-otp" element={<AuthLayout><S><VerifyOtp /></S></AuthLayout>} />
-                <Route path="reset-password" element={<AuthLayout><S><ResetPasswordPage /></S></AuthLayout>} />
-                <Route path="self-register" element={<AuthLayout><S><SelfRegisterPage /></S></AuthLayout>} />
-              </Route>
+          <ToastContainer position="bottom-center" autoClose={5000} className="bg-card text-foreground" />
+          <Sonner />
+          <Routes>
+            {/* ─── AUTH ROUTES (only accessible when NOT logged in) ─── */}
+            <Route element={<RedirectIfAuthenticated />}>
+              <Route path="login" element={<AuthLayout><S><LoginPage /></S></AuthLayout>} />
+              <Route path="forgot-password" element={<AuthLayout><S><ForgotPassword /></S></AuthLayout>} />
+              <Route path="verify-otp" element={<AuthLayout><S><VerifyOtp /></S></AuthLayout>} />
+              <Route path="reset-password" element={<AuthLayout><S><ResetPasswordPage /></S></AuthLayout>} />
+              <Route path="self-register" element={<AuthLayout><S><SelfRegisterPage /></S></AuthLayout>} />
+            </Route>
 
-              <Route path="accept-invite" element={<AuthLayout><S><AcceptInvitePage /></S></AuthLayout>} />
+            <Route path="accept-invite" element={<AuthLayout><S><AcceptInvitePage /></S></AuthLayout>} />
 
-              {/* ─── PROTECTED ROUTES (only accessible when logged in) ─── */}
-              <Route element={<P><AppLayout /></P>}>
-                {/* Dashboard */}
-                <Route path="/" element={<S><Dashboard /></S>} />
-                <Route path="/dashboard" element={<S><Dashboard /></S>} />
+            {/* ─── PROTECTED ROUTES (only accessible when logged in) ─── */}
+            <Route element={<P><AppLayout /></P>}>
+              {/* Dashboard */}
+              <Route path="/" element={<S><Dashboard /></S>} />
+              <Route path="/dashboard" element={<S><Dashboard /></S>} />
 
-                {/* Users */}
-                <Route path="/users" element={<S><UsersPage /></S>} />
+              {/* Users */}
+              <Route path="/users" element={<S><UsersPage /></S>} />
 
-                {/* Members */}
-                <Route path="/members" element={<S><MemberListPage /></S>} />
-                <Route path="/members/stats" element={<S><MemberStatsPage /></S>} />
-                <Route path="/members/create" element={<S><MemberFormPage /></S>} />
-                <Route path="/members/view" element={<S><MemberDetailPage /></S>} />
-                <Route path="/members/edit" element={<S><MemberFormPage /></S>} />
-                <Route path="/members/promote" element={<S><MemberDetailPage /></S>} />
+              {/* Members */}
+              <Route path="/members" element={<S><MemberListPage /></S>} />
+              <Route path="/members/stats" element={<S><MemberStatsPage /></S>} />
+              <Route path="/members/create" element={<S><MemberFormPage /></S>} />
+              <Route path="/members/view" element={<S><MemberDetailPage /></S>} />
+              <Route path="/members/edit" element={<S><MemberFormPage /></S>} />
+              <Route path="/members/promote" element={<S><MemberDetailPage /></S>} />
+              
+              {/* Departments */}
+              <Route path="/departments" element={<S><DepartmentListPage /></S>} />
+              <Route path="/departments/stats" element={<S><DepartmentStatsPage /></S>} />
+              <Route path="/departments/create" element={<S><DepartmentFormPage /></S>} />
+              <Route path="/departments/view" element={<S><DepartmentDetailPage /></S>} />
+              <Route path="/departments/edit" element={<S><DepartmentFormPage /></S>} />
 
-                {/* Structure */}
-                <Route path="/structure" element={<S><AreasPage /></S>} />
-                <Route path="/structure/areas/:areaId" element={<S><AreaDetailPage /></S>} />
-                <Route path="/structure/zones/:zoneId" element={<S><ZoneDetailPage /></S>} />
+              {/* Structure */}
+              <Route path="/structure" element={<S><AreasPage /></S>} />
+              <Route path="/structure/areas/:areaId" element={<S><AreaDetailPage /></S>} />
+              <Route path="/structure/zones/:zoneId" element={<S><ZoneDetailPage /></S>} />
 
-                {/* Visitors */}
-                <Route path="/visitors" element={<S><VisitorsPage /></S>} />
+              {/* Visitors */}
+              <Route path="/visitors" element={<S><VisitorsPage /></S>} />
 
-                {/* Notifications */}
-                <Route path="/system/notifications" element={<S><NotificationsPage /></S>} />
+              {/* Notifications */}
+              <Route path="/system/notifications" element={<S><NotificationsPage /></S>} />
 
-                {/* Unauthorized */}
-                <Route path="/unauthorized" element={<S><Unauthorized /></S>} />
-              </Route>
+              {/* Unauthorized */}
+              <Route path="/unauthorized" element={<S><Unauthorized /></S>} />
+            </Route>
 
-              {/* 404 - Not Found */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            {/* 404 - Not Found */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>

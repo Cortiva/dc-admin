@@ -4,6 +4,7 @@ import {
     UserPlus,
     MapPin,
     User,
+    Building2,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -64,6 +65,21 @@ const buildSections = (): NavSection[] => [
                     { title: "All Members", url: "/members" },
                     { title: "Statistics", url: "/members/stats" },
                 ],
+            },
+        ],
+    },
+    {
+        label: "Church Structure",
+        items: [
+            { title: "Areas, Zones & Cells", url: "/structure", icon: MapPin },
+            {
+                title: "Departments",
+                url: "/departments",
+                icon: Building2,
+                children: [
+                    { title: "All Departments", url: "/departments" },
+                    { title: "Statistics", url: "/departments/stats" },
+                ]
             },
         ],
     },

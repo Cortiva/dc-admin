@@ -3,7 +3,7 @@ import { Card } from "./ui/card";
 
 interface KPICardProps {
     title: string;
-    subtitle: string;
+    subtitle?: string;
     value: string;
     change?: number;
     icon: React.ReactNode;
