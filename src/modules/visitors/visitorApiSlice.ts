@@ -64,6 +64,7 @@ export const visitorApiSlice = apiSlice.injectEndpoints({
                 url: `/visitors/search`,
                 method: "GET",
                 params: filters,
+                cache: "no-store",
             }),
             providesTags: ["Visitors"],
         }),
