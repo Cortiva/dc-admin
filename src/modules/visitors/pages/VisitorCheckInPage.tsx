@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Loader2, UserPlus, Mail, Phone, MapPin, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { useSelector } from "react-redux";
 import PageHeader from "../../../components/PageHeader";
 import { Card } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
@@ -20,13 +21,51 @@ import { useCheckInVisitorMutation } from "../visitorApiSlice";
 import { handleApiError, validateNigerianPhone } from "../../../utils/functions";
 import type { VisitorProfileResponse } from "../../../types/visitor.types";
 import type { Gender, HowHeardAboutUs, LevelOfEducation, ServiceType } from "../types/visitor.types";
+import { selectCurrentUser } from "../../auth/authSlice";
+
+// ─── Constants ──────────────────────────────────────────────────────────────
+
+const GENDER_OPTIONS = [
+    { value: "MALE", label: "Male" },
+    { value: "FEMALE", label: "Female" },
+] as const;
+
+const HOW_HEARD_OPTIONS = [
+    { value: "SOCIAL_MEDIA", label: "Social Media" },
+    { value: "FRIEND_OR_FAMILY", label: "Friend or Family" },
+    { value: "CHURCH_MEMBER", label: "Church Member" },
+    { value: "FLYER_OR_BANNER", label: "Flyer or Banner" },
+    { value: "WEBSITE", label: "Website" },
+    { value: "WALK_IN", label: "Walk-in" },
+    { value: "OTHER", label: "Other" },
+] as const;
+
+const EDUCATION_OPTIONS = [
+    { value: "NO_FORMAL_EDUCATION", label: "No Formal Education" },
+    { value: "PRIMARY", label: "Primary" },
+    { value: "SECONDARY", label: "Secondary" },
+    { value: "TERTIARY", label: "Tertiary" },
+    { value: "POSTGRADUATE", label: "Postgraduate" },
+] as const;
+
+const SERVICE_TYPE_OPTIONS = [
+    { value: "SUNDAY_SERVICE", label: "Sunday Service" },
+    { value: "MIDWEEK_SERVICE", label: "Midweek Service" },
+    { value: "SPECIAL_EVENT", label: "Special Event" },
+    { value: "OTHER", label: "Other" },
+] as const;
 
 export default function VisitorCheckInPage() {
     const location = useLocation();
     const navigate = useNavigate();
     
+    // Get the current logged-in user
+    const currentUser = useSelector(selectCurrentUser);
+    const recordedById = currentUser?.id || "";
+    
     const existingVisitor = location.state?.visitor as VisitorProfileResponse | undefined;
     
+    // Initialize form data with existing visitor data if available
     const [formData, setFormData] = useState({
         memberId: existingVisitor?.memberId || "",
         firstName: existingVisitor?.member.firstName || "",
@@ -34,21 +73,21 @@ export default function VisitorCheckInPage() {
         phone: existingVisitor?.member.phone || "",
         email: existingVisitor?.member.email || "",
         gender: existingVisitor?.member.gender || "",
-        homeAddress: "",
-        localGovernmentArea: "",
-        birthday: "",
-        isBeliever: false,
-        howHeardAboutUs: "",
-        levelOfEducation: "",
-        preferenceToReturn: false,
-        whatTheyLovedMost: "",
+        homeAddress: existingVisitor?.member.homeAddress || "",
+        localGovernmentArea: existingVisitor?.member.localGovernmentArea || "",
+        birthday: existingVisitor?.member.birthday || "",
+        isBeliever: existingVisitor?.member.isBeliever || false,
+        // Pre-populate visitor profile fields from existing visitor
+        howHeardAboutUs: existingVisitor?.howHeardAboutUs || "",
+        levelOfEducation: existingVisitor?.levelOfEducation || "",
+        preferenceToReturn: existingVisitor?.preferenceToReturn || false,
+        whatTheyLovedMost: existingVisitor?.whatTheyLovedMost || "",
         serviceType: "",
         notes: "",
-        recordedById: "system",
+        recordedById: recordedById,
     });
 
     const [phoneError, setPhoneError] = useState<string | null>(null);
-    // const [isPhoneValid, setIsPhoneValid] = useState(false);
     const [phoneTouched, setPhoneTouched] = useState(false);
 
     const [checkInVisitor, { isLoading }] = useCheckInVisitorMutation();
@@ -64,22 +103,25 @@ export default function VisitorCheckInPage() {
         
         if (value.trim() === "") {
             setPhoneError("Phone number is required");
-            // setIsPhoneValid(false);
             return;
         }
         
         const result = validateNigerianPhone(value);
         if (!result.valid) {
             setPhoneError(result.error || null);
-            // setIsPhoneValid(false);
         } else {
             setPhoneError(null);
-            // setIsPhoneValid(true);
         }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validate that user is logged in
+        if (!recordedById) {
+            toast.error("You must be logged in to check in a visitor");
+            return;
+        }
 
         // Validate required fields
         if (!formData.memberId && (!formData.firstName || !formData.lastName || !formData.phone)) {
@@ -128,10 +170,10 @@ export default function VisitorCheckInPage() {
                 whatTheyLovedMost: formData.whatTheyLovedMost || undefined,
                 serviceType: formData.serviceType as ServiceType,
                 notes: formData.notes || undefined,
-                recordedById: formData.recordedById,
+                recordedById: recordedById,
             }).unwrap();
 
-            toast.success("Visitor checked in successfully!");
+            toast.success(existingVisitor ? "Visit recorded successfully!" : "Visitor checked in successfully!");
             navigate("/visitors");
         } catch (error) {
             handleApiError(error);
@@ -181,6 +223,23 @@ export default function VisitorCheckInPage() {
                                     </>
                                 )}
 
+                                {existingVisitor && (
+                                    <>
+                                        <div className="space-y-2">
+                                            <Label>First Name</Label>
+                                            <div className="p-2 bg-muted/30 rounded-md text-sm">
+                                                {formData.firstName}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Last Name</Label>
+                                            <div className="p-2 bg-muted/30 rounded-md text-sm">
+                                                {formData.lastName}
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
                                 <div className="space-y-2">
                                     <Label htmlFor="phone">Phone Number *</Label>
                                     <div className="relative">
@@ -214,6 +273,7 @@ export default function VisitorCheckInPage() {
                                             onChange={(e) => handleChange("email", e.target.value)}
                                             placeholder="you@example.com"
                                             className="pl-10"
+                                            disabled={!!existingVisitor}
                                         />
                                     </div>
                                 </div>
@@ -221,16 +281,20 @@ export default function VisitorCheckInPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="gender">Gender</Label>
                                     <Select
-                                        value={formData.gender}
-                                        onValueChange={(value) => handleChange("gender", value)}
+                                        value={formData.gender || "none"}
+                                        onValueChange={(value) => handleChange("gender", value === "none" ? "" : value)}
+                                        disabled={!!existingVisitor}
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select gender" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="">Not specified</SelectItem>
-                                            <SelectItem value="MALE">Male</SelectItem>
-                                            <SelectItem value="FEMALE">Female</SelectItem>
+                                            <SelectItem value="none">Not specified</SelectItem>
+                                            {GENDER_OPTIONS.map((option) => (
+                                                <SelectItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -245,6 +309,7 @@ export default function VisitorCheckInPage() {
                                             value={formData.birthday}
                                             onChange={(e) => handleChange("birthday", e.target.value)}
                                             className="pl-10"
+                                            disabled={!!existingVisitor}
                                         />
                                     </div>
                                 </div>
@@ -259,6 +324,7 @@ export default function VisitorCheckInPage() {
                                             onChange={(e) => handleChange("homeAddress", e.target.value)}
                                             placeholder="Enter home address"
                                             className="pl-10"
+                                            disabled={!!existingVisitor}
                                         />
                                     </div>
                                 </div>
@@ -270,6 +336,7 @@ export default function VisitorCheckInPage() {
                                         value={formData.localGovernmentArea}
                                         onChange={(e) => handleChange("localGovernmentArea", e.target.value)}
                                         placeholder="Enter LGA"
+                                        disabled={!!existingVisitor}
                                     />
                                 </div>
 
@@ -278,6 +345,7 @@ export default function VisitorCheckInPage() {
                                         id="isBeliever"
                                         checked={formData.isBeliever}
                                         onCheckedChange={(checked) => handleChange("isBeliever", checked)}
+                                        disabled={!!existingVisitor}
                                     />
                                     <Label htmlFor="isBeliever" className="cursor-pointer">Is a Believer</Label>
                                 </div>
@@ -291,20 +359,19 @@ export default function VisitorCheckInPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="howHeardAboutUs">How Heard About Us *</Label>
                                     <Select
-                                        value={formData.howHeardAboutUs}
-                                        onValueChange={(value) => handleChange("howHeardAboutUs", value)}
+                                        value={formData.howHeardAboutUs || "none"}
+                                        onValueChange={(value) => handleChange("howHeardAboutUs", value === "none" ? "" : value)}
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select how they heard" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="SOCIAL_MEDIA">Social Media</SelectItem>
-                                            <SelectItem value="FRIEND_OR_FAMILY">Friend or Family</SelectItem>
-                                            <SelectItem value="CHURCH_MEMBER">Church Member</SelectItem>
-                                            <SelectItem value="FLYER_OR_BANNER">Flyer or Banner</SelectItem>
-                                            <SelectItem value="WEBSITE">Website</SelectItem>
-                                            <SelectItem value="WALK_IN">Walk-in</SelectItem>
-                                            <SelectItem value="OTHER">Other</SelectItem>
+                                            <SelectItem value="none">Select a source</SelectItem>
+                                            {HOW_HEARD_OPTIONS.map((option) => (
+                                                <SelectItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -312,18 +379,19 @@ export default function VisitorCheckInPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="levelOfEducation">Education Level *</Label>
                                     <Select
-                                        value={formData.levelOfEducation}
-                                        onValueChange={(value) => handleChange("levelOfEducation", value)}
+                                        value={formData.levelOfEducation || "none"}
+                                        onValueChange={(value) => handleChange("levelOfEducation", value === "none" ? "" : value)}
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select education level" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="NO_FORMAL_EDUCATION">No Formal Education</SelectItem>
-                                            <SelectItem value="PRIMARY">Primary</SelectItem>
-                                            <SelectItem value="SECONDARY">Secondary</SelectItem>
-                                            <SelectItem value="TERTIARY">Tertiary</SelectItem>
-                                            <SelectItem value="POSTGRADUATE">Postgraduate</SelectItem>
+                                            <SelectItem value="none">Select education level</SelectItem>
+                                            {EDUCATION_OPTIONS.map((option) => (
+                                                <SelectItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -331,17 +399,19 @@ export default function VisitorCheckInPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="serviceType">Service Type *</Label>
                                     <Select
-                                        value={formData.serviceType}
-                                        onValueChange={(value) => handleChange("serviceType", value)}
+                                        value={formData.serviceType || "none"}
+                                        onValueChange={(value) => handleChange("serviceType", value === "none" ? "" : value)}
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select service type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="SUNDAY_SERVICE">Sunday Service</SelectItem>
-                                            <SelectItem value="MIDWEEK_SERVICE">Midweek Service</SelectItem>
-                                            <SelectItem value="SPECIAL_EVENT">Special Event</SelectItem>
-                                            <SelectItem value="OTHER">Other</SelectItem>
+                                            <SelectItem value="none">Select service type</SelectItem>
+                                            {SERVICE_TYPE_OPTIONS.map((option) => (
+                                                <SelectItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -383,7 +453,7 @@ export default function VisitorCheckInPage() {
                         <Button variant="outline" type="button" onClick={() => navigate("/visitors")}>
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={isLoading}>
+                        <Button type="submit" disabled={isLoading || !recordedById}>
                             {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                             {existingVisitor ? "Record Visit" : "Check-in Visitor"}
                         </Button>

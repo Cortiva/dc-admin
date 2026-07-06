@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, User } from "lucide-react";
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import PageHeader from "../../../components/PageHeader";
@@ -16,7 +16,7 @@ import {
     SelectValue,
 } from "../../../components/ui/select";
 import { Checkbox } from "../../../components/ui/checkbox";
-import { useGetVisitorByMemberIdQuery, useUpdateVisitorProfileMutation } from "../visitorApiSlice";
+import { useUpdateVisitorProfileMutation } from "../visitorApiSlice";
 import { handleApiError } from "../../../utils/functions";
 import { apiSlice } from "../../../store/apiSlice";
 import type { VisitorProfileResponse } from "../../../types/visitor.types";
@@ -26,19 +26,9 @@ export default function VisitorFormPage() {
     const location = useLocation();
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const { memberId } = useParams<{ memberId: string }>();
 
-    // Get visitor from route state or fetch by ID
-    const visitorFromState = location.state?.visitor as VisitorProfileResponse | undefined;
-    const [visitor, setVisitor] = useState<VisitorProfileResponse | null>(visitorFromState || null);
-    const [isLoading, setIsLoading] = useState(!visitorFromState);
-
-    const { data: fetchedVisitor, isLoading: isFetching, isError } = useGetVisitorByMemberIdQuery(
-        memberId!,
-        { skip: !!visitorFromState || !memberId }
-    );
-
-    const [updateVisitorProfile, { isLoading: isUpdating }] = useUpdateVisitorProfileMutation();
+    // Get visitor from route state
+    const visitor = location.state?.visitor as VisitorProfileResponse | undefined;
 
     const [formData, setFormData] = useState({
         howHeardAboutUs: visitor?.howHeardAboutUs || "",
@@ -47,29 +37,13 @@ export default function VisitorFormPage() {
         whatTheyLovedMost: visitor?.whatTheyLovedMost || "",
     });
 
-    useEffect(() => {
-        if (fetchedVisitor) {
-            setVisitor(fetchedVisitor);
-            setIsLoading(false);
-            setFormData({
-                howHeardAboutUs: fetchedVisitor.howHeardAboutUs || "",
-                levelOfEducation: fetchedVisitor.levelOfEducation || "",
-                preferenceToReturn: fetchedVisitor.preferenceToReturn || false,
-                whatTheyLovedMost: fetchedVisitor.whatTheyLovedMost || "",
-            });
-        }
-        if (isError) {
-            toast.error("Failed to load visitor profile");
-            setIsLoading(false);
-        }
-    }, [fetchedVisitor, isError]);
+    const [updateVisitorProfile, { isLoading: isUpdating }] = useUpdateVisitorProfileMutation();
 
-    // Redirect if no visitor and no ID
-    useEffect(() => {
-        if (!location.state?.visitor && !memberId) {
-            navigate("/visitors", { replace: true });
-        }
-    }, [location.state, memberId, navigate]);
+    // If no visitor data in state, redirect back to list
+    if (!visitor) {
+        navigate("/visitors", { replace: true });
+        return null;
+    }
 
     const handleChange = (field: string, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -89,8 +63,11 @@ export default function VisitorFormPage() {
             if (formData.preferenceToReturn !== undefined) data.preferenceToReturn = formData.preferenceToReturn;
             if (formData.whatTheyLovedMost !== undefined) data.whatTheyLovedMost = formData.whatTheyLovedMost;
 
-            const memberIdToUse = visitor?.memberId || memberId;
-            await updateVisitorProfile({ memberId: memberIdToUse!, data }).unwrap();
+            await updateVisitorProfile({ 
+                memberId: visitor.memberId, 
+                data 
+            }).unwrap();
+            
             toast.success("Visitor profile updated successfully");
             await refetchVisitors();
             navigate("/visitors");
@@ -98,42 +75,6 @@ export default function VisitorFormPage() {
             handleApiError(error);
         }
     };
-
-    if (isLoading || isFetching) {
-        return (
-            <div className="space-y-4 sm:space-y-6">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
-                    <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-                </div>
-                <Card className="p-4 sm:p-6">
-                    <div className="space-y-4">
-                        {Array.from({ length: 4 }).map((_, i) => (
-                            <div key={i} className="space-y-2">
-                                <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-                                <div className="h-10 w-full bg-muted animate-pulse rounded" />
-                            </div>
-                        ))}
-                    </div>
-                </Card>
-            </div>
-        );
-    }
-
-    if (!visitor) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-100 p-8">
-                <div className="text-center max-w-md">
-                    <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
-                        <User className="w-8 h-8 text-red-500" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">Visitor Not Found</h3>
-                    <p className="text-sm text-muted-foreground mb-6">The visitor profile you're looking for doesn't exist.</p>
-                    <Button onClick={() => navigate("/visitors")}>Back to Visitors</Button>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-4 sm:space-y-6">
@@ -176,13 +117,14 @@ export default function VisitorFormPage() {
                         <div className="space-y-2">
                             <Label htmlFor="howHeardAboutUs">How Heard About Us</Label>
                             <Select
-                                value={formData.howHeardAboutUs}
-                                onValueChange={(value) => handleChange("howHeardAboutUs", value)}
+                                value={formData.howHeardAboutUs || "none"}
+                                onValueChange={(value) => handleChange("howHeardAboutUs", value === "none" ? "" : value)}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select how they heard" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    <SelectItem value="none">Select a source</SelectItem>
                                     <SelectItem value="SOCIAL_MEDIA">Social Media</SelectItem>
                                     <SelectItem value="FRIEND_OR_FAMILY">Friend or Family</SelectItem>
                                     <SelectItem value="CHURCH_MEMBER">Church Member</SelectItem>
@@ -197,13 +139,14 @@ export default function VisitorFormPage() {
                         <div className="space-y-2">
                             <Label htmlFor="levelOfEducation">Education Level</Label>
                             <Select
-                                value={formData.levelOfEducation}
-                                onValueChange={(value) => handleChange("levelOfEducation", value)}
+                                value={formData.levelOfEducation || "none"}
+                                onValueChange={(value) => handleChange("levelOfEducation", value === "none" ? "" : value)}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select education level" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    <SelectItem value="none">Select education level</SelectItem>
                                     <SelectItem value="NO_FORMAL_EDUCATION">No Formal Education</SelectItem>
                                     <SelectItem value="PRIMARY">Primary</SelectItem>
                                     <SelectItem value="SECONDARY">Secondary</SelectItem>

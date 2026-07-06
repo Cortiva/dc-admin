@@ -143,8 +143,8 @@ function App() {
               {/* Visitors */}
               <Route path="/visitors" element={<S><VisitorListPage /></S>} />
               <Route path="/visitors/check-in" element={<S><VisitorCheckInPage /></S>} />
-              <Route path="/visitors/:memberId" element={<S><VisitorDetailPage /></S>} />
-              <Route path="/visitors/:memberId/edit" element={<S><VisitorFormPage /></S>} />
+              <Route path="/visitors/view" element={<S><VisitorDetailPage /></S>} />
+              <Route path="/visitors/edit" element={<S><VisitorFormPage /></S>} />
 
               {/* Notifications */}
               <Route path="/system/notifications" element={<S><NotificationsPage /></S>} />

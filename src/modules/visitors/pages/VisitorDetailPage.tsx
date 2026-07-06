@@ -1,5 +1,4 @@
-
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
     ArrowLeft, Edit, User, Phone, Mail, 
     Calendar, Users, Award, CheckCircle,
@@ -10,12 +9,11 @@ import PageHeader from "../../../components/PageHeader";
 import { Card } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
-import { Skeleton } from "../../../components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "../../../components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
 import { Separator } from "../../../components/ui/separator";
-import { useGetVisitorByMemberIdQuery } from "../visitorApiSlice";
 import { getInitials } from "../../../utils/functions";
+import type { VisitorProfileResponse } from "../../../types/visitor.types";
 
 interface InfoItemProps {
     label: string;
@@ -34,47 +32,27 @@ const InfoItem = ({ label, value, icon }: InfoItemProps) => (
 );
 
 export default function VisitorDetailPage() {
-    const { memberId } = useParams<{ memberId: string }>();
+    const location = useLocation();
     const navigate = useNavigate();
     
-    const { data: visitor, isLoading, isError } = useGetVisitorByMemberIdQuery(memberId!);
+    // Get visitor data from state
+    const visitor = location.state?.visitor as VisitorProfileResponse | undefined;
 
-    if (isLoading) {
-        return (
-            <div className="space-y-6">
-                <div className="flex items-center gap-3">
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                    <Skeleton className="h-8 w-48" />
-                </div>
-                <div className="flex flex-col lg:flex-row gap-6">
-                    <div className="lg:w-1/3">
-                        <Skeleton className="h-80 w-full rounded-xl" />
-                    </div>
-                    <div className="lg:w-2/3">
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-64 w-full mt-4" />
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (isError || !visitor) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-100 p-8">
-                <div className="text-center max-w-md">
-                    <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
-                        <User className="w-8 h-8 text-red-500" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">Visitor Not Found</h3>
-                    <p className="text-sm text-muted-foreground mb-6">The visitor you're looking for doesn't exist.</p>
-                    <Button onClick={() => navigate("/visitors")}>Back to Visitors</Button>
-                </div>
-            </div>
-        );
+    // If no visitor data in state, redirect back to list
+    if (!visitor) {
+        navigate("/visitors", { replace: true });
+        return null;
     }
 
     const lastVisit = visitor.visits?.[0]?.visitDate;
+
+    const handleRecordVisit = () => {
+        navigate("/visitors/check-in", { state: { visitor } });
+    };
+
+    const handleEdit = () => {
+        navigate("/visitors/edit", { state: { visitor } });
+    };
 
     return (
         <div className="space-y-6">
@@ -91,15 +69,19 @@ export default function VisitorDetailPage() {
                     />
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                    <Button variant="outline" size="sm" onClick={() => navigator.clipboard?.writeText(visitor.memberId)}>
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => navigator.clipboard?.writeText(visitor.memberId)}
+                    >
                         <Copy className="w-4 h-4 mr-2" />
                         Copy ID
                     </Button>
-                    <Button variant="outline" onClick={() => navigate("/visitors/check-in", { state: { visitor } })}>
+                    <Button variant="outline" onClick={handleRecordVisit}>
                         <UserPlus className="w-4 h-4 mr-2" />
                         Record Visit
                     </Button>
-                    <Button variant="outline" onClick={() => navigate(`/visitors/${visitor.memberId}/edit`, { state: { visitor } })}>
+                    <Button variant="outline" onClick={handleEdit}>
                         <Edit className="w-4 h-4 mr-2" />
                         Edit
                     </Button>
@@ -197,7 +179,7 @@ export default function VisitorDetailPage() {
                                         <Button 
                                             variant="outline" 
                                             className="mt-4"
-                                            onClick={() => navigate("/visitors/check-in", { state: { visitor } })}
+                                            onClick={handleRecordVisit}
                                         >
                                             <UserPlus className="w-4 h-4 mr-2" />
                                             Record Visit

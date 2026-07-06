@@ -76,6 +76,18 @@ export default function VisitorListPage() {
         return variants[status] || { variant: "outline", label: status };
     };
 
+    const handleViewVisitor = (visitor: VisitorProfileResponse) => {
+        navigate("/visitors/view", { state: { visitor } });
+    };
+
+    const handleEditVisitor = (visitor: VisitorProfileResponse) => {
+        navigate("/visitors/edit", { state: { visitor } });
+    };
+
+    const handleRecordVisit = (visitor: VisitorProfileResponse) => {
+        navigate("/visitors/check-in", { state: { visitor } });
+    };
+
     return (
         <div className="space-y-4 sm:space-y-6">
             <PageHeader
@@ -180,18 +192,14 @@ export default function VisitorListPage() {
                                         <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
                                         <p className="text-lg font-medium">No visitors found</p>
                                         <p className="text-sm">Try adjusting your search or filters</p>
-                                        <Button className="mt-4" onClick={() => navigate("/visitors/check-in")}>
-                                            <UserPlus className="w-4 h-4 mr-2" />
-                                            Check in a visitor
-                                        </Button>
                                     </td>
                                 </tr>
                             ) : (
-                                data?.visitors.map((visitor: VisitorProfileResponse) => {
+                                data?.visitors.map((visitor: VisitorProfileResponse, index: number) => {
                                     const status = getStatusBadge(visitor.status);
                                     const lastVisit = visitor.visits?.[0]?.visitDate;
                                     return (
-                                        <tr key={visitor.id} className="border-t border-muted/30 hover:bg-muted/20 transition-colors">
+                                        <tr key={index} className="border-t border-muted/30 hover:bg-muted/20 transition-colors">
                                             <td className="p-3">
                                                 <div className="flex items-center gap-3">
                                                     <Avatar className="h-8 w-8">
@@ -231,15 +239,15 @@ export default function VisitorListPage() {
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem onClick={() => navigate(`/visitors/${visitor.memberId}`)}>
+                                                        <DropdownMenuItem onClick={() => handleViewVisitor(visitor)}>
                                                             <Eye className="w-4 h-4 mr-2" />
                                                             View
                                                         </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => navigate(`/visitors/check-in`, { state: { visitor } })}>
+                                                        <DropdownMenuItem onClick={() => handleRecordVisit(visitor)}>
                                                             <UserPlus className="w-4 h-4 mr-2" />
                                                             Record Visit
                                                         </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => navigate(`/visitors/${visitor.memberId}/edit`)}>
+                                                        <DropdownMenuItem onClick={() => handleEditVisitor(visitor)}>
                                                             <Edit className="w-4 h-4 mr-2" />
                                                             Edit Profile
                                                         </DropdownMenuItem>
