@@ -128,9 +128,9 @@ export default function VisitorListPage() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All Status</SelectItem>
-                                <SelectItem value="FIRST_TIMER">First Timer</SelectItem>
+                                {/* <SelectItem value="FIRST_TIMER">First Timer</SelectItem> */}
                                 <SelectItem value="SECOND_TIMER">Second Timer</SelectItem>
-                                <SelectItem value="RETURNING">Returning</SelectItem>
+                                {/* <SelectItem value="RETURNING">Returning</SelectItem> */}
                             </SelectContent>
                         </Select>
 
