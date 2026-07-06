@@ -49,7 +49,7 @@ export const visitorApiSlice = apiSlice.injectEndpoints({
                 url: `/visitors/${memberId}`,
                 method: "GET",
             }),
-            providesTags: (result, error, memberId) => [
+            providesTags: (_, __, memberId) => [
                 { type: "Visitors", id: memberId },
             ],
         }),
@@ -79,7 +79,7 @@ export const visitorApiSlice = apiSlice.injectEndpoints({
                 method: "PUT",
                 body: data,
             }),
-            invalidatesTags: (result, error, { memberId }) => [
+            invalidatesTags: (_, __, { memberId }) => [
                 { type: "Visitors", id: memberId },
             ],
         }),

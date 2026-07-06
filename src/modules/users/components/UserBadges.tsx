@@ -5,6 +5,7 @@ const STATUS_STYLES: Record<UserStatus, string> = {
     ACTIVE: "bg-green-500/10 text-green-800",
     PENDING_INVITE: "bg-amber-500/10 text-amber-800",
     PENDING_APPROVAL: "bg-blue-500/10 text-blue-800",
+    PENDING_VERIFICATION: "bg-cyan-500/10 text-cyan-800",
     SUSPENDED: "bg-gray-200 text-gray-700",
     REJECTED: "bg-red-500/10 text-red-800",
 };
@@ -13,6 +14,7 @@ const STATUS_LABELS: Record<UserStatus, string> = {
     ACTIVE: "Active",
     PENDING_INVITE: "Invite sent",
     PENDING_APPROVAL: "Awaiting approval",
+    PENDING_VERIFICATION: "Awaiting verification",
     SUSPENDED: "Suspended",
     REJECTED: "Rejected",
 };

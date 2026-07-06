@@ -11,7 +11,6 @@ import type {
     AreaResponse,
     ZoneResponse,
     CellResponse,
-    StructureStatsResponse,
     AssignLeaderRequest,
     ExportStructureRequest,
     CellTransferRequest,
@@ -39,7 +38,7 @@ export const structureApiSlice = apiSlice.injectEndpoints({
                 url: `/structure/areas/${id}`,
                 method: "GET",
             }),
-            providesTags: (result, error, id) => [{ type: "Areas", id }],
+            providesTags: (_, __, id) => [{ type: "Areas", id }],
         }),
 
         createArea: builder.mutation<AreaResponse, CreateAreaRequest>({
@@ -60,7 +59,7 @@ export const structureApiSlice = apiSlice.injectEndpoints({
                 method: "PUT",
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: "Areas", id }],
+            invalidatesTags: (_, __, { id }) => [{ type: "Areas", id }],
         }),
 
         deleteArea: builder.mutation<{ success: boolean }, string>({
@@ -80,7 +79,7 @@ export const structureApiSlice = apiSlice.injectEndpoints({
                 method: "POST",
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: "Areas", id }],
+            invalidatesTags: (_, __, { id }) => [{ type: "Areas", id }],
         }),
 
         removeAreaLeader: builder.mutation<AreaResponse, string>({
@@ -88,7 +87,7 @@ export const structureApiSlice = apiSlice.injectEndpoints({
                 url: `/structure/areas/${id}/remove-leader`,
                 method: "POST",
             }),
-            invalidatesTags: (result, error, id) => [{ type: "Areas", id }],
+            invalidatesTags: (_, __, id) => [{ type: "Areas", id }],
         }),
 
         // ─── ZONES ───────────────────────────────────────────────────────────
@@ -110,7 +109,7 @@ export const structureApiSlice = apiSlice.injectEndpoints({
                 url: `/structure/zones/${id}`,
                 method: "GET",
             }),
-            providesTags: (result, error, id) => [{ type: "Zones", id }],
+            providesTags: (_, __, id) => [{ type: "Zones", id }],
         }),
 
         createZone: builder.mutation<ZoneResponse, CreateZoneRequest>({
@@ -131,7 +130,7 @@ export const structureApiSlice = apiSlice.injectEndpoints({
                 method: "PUT",
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => [
+            invalidatesTags: (_, __, { id }) => [
                 { type: "Zones", id },
                 "Areas",
             ],
@@ -154,7 +153,7 @@ export const structureApiSlice = apiSlice.injectEndpoints({
                 method: "POST",
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: "Zones", id }],
+            invalidatesTags: (_, __, { id }) => [{ type: "Zones", id }],
         }),
 
         removeZoneLeader: builder.mutation<ZoneResponse, string>({
@@ -162,7 +161,7 @@ export const structureApiSlice = apiSlice.injectEndpoints({
                 url: `/structure/zones/${id}/remove-leader`,
                 method: "POST",
             }),
-            invalidatesTags: (result, error, id) => [{ type: "Zones", id }],
+            invalidatesTags: (_, __, id) => [{ type: "Zones", id }],
         }),
 
         // ─── CELLS ───────────────────────────────────────────────────────────
@@ -184,7 +183,7 @@ export const structureApiSlice = apiSlice.injectEndpoints({
                 url: `/structure/cells/${id}`,
                 method: "GET",
             }),
-            providesTags: (result, error, id) => [{ type: "Cells", id }],
+            providesTags: (_, __, id) => [{ type: "Cells", id }],
         }),
 
         createCell: builder.mutation<CellResponse, CreateCellRequest>({
@@ -205,7 +204,7 @@ export const structureApiSlice = apiSlice.injectEndpoints({
                 method: "PUT",
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => [
+            invalidatesTags: (_, __, { id }) => [
                 { type: "Cells", id },
                 "Zones",
             ],
@@ -228,7 +227,7 @@ export const structureApiSlice = apiSlice.injectEndpoints({
                 method: "POST",
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: "Cells", id }],
+            invalidatesTags: (_, __, { id }) => [{ type: "Cells", id }],
         }),
 
         removeCellLeader: builder.mutation<CellResponse, string>({
@@ -236,7 +235,7 @@ export const structureApiSlice = apiSlice.injectEndpoints({
                 url: `/structure/cells/${id}/remove-leader`,
                 method: "POST",
             }),
-            invalidatesTags: (result, error, id) => [{ type: "Cells", id }],
+            invalidatesTags: (_, __, id) => [{ type: "Cells", id }],
         }),
 
         // ─── STATISTICS ──────────────────────────────────────────────────────

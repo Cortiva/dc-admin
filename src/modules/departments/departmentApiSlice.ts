@@ -8,7 +8,7 @@ import type {
     DepartmentSearchFilters,
     DepartmentListResponse,
     DepartmentResponse,
-    DepartmentStatsResponse,
+    // DepartmentStatsResponse,
     DepartmentMemberResponse,
     ExportDepartmentRequest,
 } from "../../types/department.types";
@@ -34,7 +34,7 @@ export const departmentApiSlice = apiSlice.injectEndpoints({
                 url: `/departments/${id}`,
                 method: "GET",
             }),
-            providesTags: (result, error, id) => [{ type: "Departments", id }],
+            providesTags: (_, __, id) => [{ type: "Departments", id }],
         }),
 
         createDepartment: builder.mutation<
@@ -58,9 +58,7 @@ export const departmentApiSlice = apiSlice.injectEndpoints({
                 method: "PUT",
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => [
-                { type: "Departments", id },
-            ],
+            invalidatesTags: (_, __, { id }) => [{ type: "Departments", id }],
         }),
 
         deleteDepartment: builder.mutation<{ success: boolean }, string>({
@@ -106,7 +104,7 @@ export const departmentApiSlice = apiSlice.injectEndpoints({
                 transformResponse: (
                     response: ApiEnvelope<DepartmentMemberResponse[]>,
                 ) => response.data,
-                providesTags: (result, error, departmentId) => [
+                providesTags: (_, __, departmentId) => [
                     { type: "Departments", id: departmentId },
                 ],
             },

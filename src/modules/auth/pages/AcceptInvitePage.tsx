@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { Eye, EyeOff, Loader2, CheckCircle, XCircle } from "lucide-react";
+import {
+    Eye, EyeOff,
+    // Loader2,
+    CheckCircle, XCircle
+} from "lucide-react";
 import { toast } from "sonner";
-import { useAcceptInviteMutation } from "../authApiSlice";
 import { handleApiError } from "../../../utils/functions";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
@@ -13,7 +16,7 @@ export default function AcceptInvitePage() {
     const [searchParams] = useSearchParams();
     const token = searchParams.get("token");
 
-    const [acceptInvite, { isLoading }] = useAcceptInviteMutation();
+    // const [acceptInvite, { isLoading }] = useAcceptInviteMutation();
 
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -55,11 +58,11 @@ export default function AcceptInvitePage() {
         }
 
         try {
-            await acceptInvite({
-                token,
-                password,
-                confirmPassword,
-            }).unwrap();
+            // await acceptInvite({
+            //     token,
+            //     password,
+            //     confirmPassword,
+            // }).unwrap();
 
             setAccepted(true);
             toast.success("Invitation accepted! You can now sign in.");
@@ -170,17 +173,18 @@ export default function AcceptInvitePage() {
                 {/* Submit */}
                 <Button
                     type="submit"
-                    disabled={isLoading || !isFormValid}
+                    // disabled={isLoading || !isFormValid}
                     className="w-full h-11 mt-4"
                 >
-                    {isLoading ? (
+                    {/* {isLoading ? (
                         <>
                             <Loader2 size={18} className="animate-spin mr-2" />
                             Setting up account...
                         </>
                     ) : (
                         "Accept Invitation"
-                    )}
+                    )} */}
+                    Accept Invitation
                 </Button>
             </form>
 

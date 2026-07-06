@@ -2,9 +2,9 @@ import { Card } from "../../../components/ui/card";
 import { Avatar, AvatarFallback } from "../../../components/ui/avatar";
 import { ChevronRight, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import type { Area } from "../types/structure.types";
+import type { AreaResponse } from "../../../types/structure.types";
 
-export function AreaCard({ area, zoneCount }: { area: Area; zoneCount?: number }) {
+export function AreaCard({ area, zoneCount }: { area: AreaResponse; zoneCount?: number }) {
     const navigate = useNavigate();
     const initials = area.leader
         ? `${area.leader.firstName[0]}${area.leader.lastName[0]}`.toUpperCase()

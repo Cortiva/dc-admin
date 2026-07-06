@@ -1,11 +1,11 @@
 import { Card } from "../../../components/ui/card";
 import { Avatar, AvatarFallback } from "../../../components/ui/avatar";
 import { Sprout } from "lucide-react";
-import type { Cell } from "../types/structure.types";
+import type { CellResponse } from "../../../types/structure.types";
 
 interface CellCardProps {
-    cell: Cell;
-    onView: (cell: Cell) => void;
+    cell: CellResponse;
+    onView: (cell: CellResponse) => void;
 }
 
 // Cells have no children, so this opens a detail modal on click rather

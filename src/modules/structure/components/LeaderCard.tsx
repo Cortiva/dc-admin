@@ -1,10 +1,10 @@
 import { User as UserIcon, Pencil } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Avatar, AvatarFallback } from "../../../components/ui/avatar";
-import type { LeaderRef } from "../types/structure.types";
+import type { Leader } from "../../../types/structure.types";
 
 interface LeaderCardProps {
-    leader: LeaderRef | null;
+    leader: Leader | null;
     onChangeLeader: () => void;
 }
 

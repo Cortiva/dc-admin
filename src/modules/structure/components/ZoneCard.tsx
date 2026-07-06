@@ -2,9 +2,9 @@ import { Card } from "../../../components/ui/card";
 import { Avatar, AvatarFallback } from "../../../components/ui/avatar";
 import { ChevronRight, Layers } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import type { Zone } from "../types/structure.types";
+import type { ZoneResponse } from "../../../types/structure.types";
 
-export function ZoneCard({ zone, cellCount }: { zone: Zone; cellCount?: number }) {
+export function ZoneCard({ zone, cellCount }: { zone: ZoneResponse; cellCount?: number }) {
     const navigate = useNavigate();
     const initials = zone.leader
         ? `${zone.leader.firstName[0]}${zone.leader.lastName[0]}`.toUpperCase()

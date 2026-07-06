@@ -42,7 +42,7 @@ export const memberApiSlice = apiSlice.injectEndpoints({
                 url: `/members/${id}`,
                 method: "GET",
             }),
-            providesTags: (result, error, id) => [{ type: "Members", id }],
+            providesTags: (_, __, id) => [{ type: "Members", id }],
         }),
 
         createMember: builder.mutation<MemberResponse, CreateMemberRequest>({
@@ -63,9 +63,7 @@ export const memberApiSlice = apiSlice.injectEndpoints({
                 method: "PUT",
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => [
-                { type: "Members", id },
-            ],
+            invalidatesTags: (_, __, { id }) => [{ type: "Members", id }],
         }),
 
         deleteMember: builder.mutation<{ success: boolean }, string>({
@@ -95,7 +93,7 @@ export const memberApiSlice = apiSlice.injectEndpoints({
                 method: "POST",
                 body: data,
             }),
-            invalidatesTags: (result, error, { memberId }) => [
+            invalidatesTags: (_, __, { memberId }) => [
                 { type: "Members", id: memberId },
             ],
         }),
@@ -109,7 +107,7 @@ export const memberApiSlice = apiSlice.injectEndpoints({
                     method: "PUT",
                     body: { cellId },
                 }),
-                invalidatesTags: (result, error, { memberId }) => [
+                invalidatesTags: (_, __, { memberId }) => [
                     { type: "Members", id: memberId },
                 ],
             },
@@ -126,7 +124,7 @@ export const memberApiSlice = apiSlice.injectEndpoints({
                 method: "PUT",
                 body: { departmentId },
             }),
-            invalidatesTags: (result, error, { memberId }) => [
+            invalidatesTags: (_, __, { memberId }) => [
                 { type: "Members", id: memberId },
             ],
         }),

@@ -75,15 +75,7 @@ export interface AreaResponse {
     name: string;
     description: string | null;
     leaderId: string | null;
-    leader?: {
-        id: string;
-        firstName: string;
-        lastName: string;
-        phone: string;
-        email: string | null;
-        profileImageUrl: string | null;
-        gender: string | null;
-    } | null;
+    leader?: Leader | null;
     zones: ZoneResponse[];
     _count?: {
         zones: number;
@@ -100,15 +92,7 @@ export interface ZoneResponse {
     areaId: string;
     area?: AreaResponse;
     leaderId: string | null;
-    leader?: {
-        id: string;
-        firstName: string;
-        lastName: string;
-        phone: string;
-        email: string | null;
-        profileImageUrl: string | null;
-        gender: string | null;
-    } | null;
+    leader?: Leader | null;
     cells: CellResponse[];
     _count?: {
         cells: number;
@@ -118,6 +102,16 @@ export interface ZoneResponse {
     updatedAt: Date;
 }
 
+export interface Leader {
+    id: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    email: string | null;
+    profileImageUrl: string | null;
+    gender: string | null;
+}
+
 export interface CellResponse {
     id: string;
     name: string;
@@ -125,15 +119,7 @@ export interface CellResponse {
     zoneId: string;
     zone?: ZoneResponse;
     leaderId: string | null;
-    leader?: {
-        id: string;
-        firstName: string;
-        lastName: string;
-        phone: string;
-        email: string | null;
-        profileImageUrl: string | null;
-        gender: string | null;
-    } | null;
+    leader?: Leader | null;
     members: Array<{
         id: string;
         firstName: string;

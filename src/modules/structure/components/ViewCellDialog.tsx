@@ -10,12 +10,12 @@ import { Calendar, Layers, MapPin } from "lucide-react";
 import { useState } from "react";
 import { LeaderCard } from "./LeaderCard";
 import { LeaderPickerDialog } from "./LeaderPickerDialog";
-import type { Cell } from "../types/structure.types";
-import { useUpdateCellLeaderMutation, useUpdateCellMutation } from "../structureApiSlice";
 import { EditDetailsDialog } from "./EditDetailDialog";
+import type { CellResponse } from "../../../types/structure.types";
+import { useUpdateCellMutation, useAssignCellLeaderMutation } from "../structureApiSlice";
 
 interface ViewCellDialogProps {
-    cell: Cell | null;
+    cell: CellResponse | null;
     onClose: () => void;
     onSuccess: () => void;
 }
@@ -24,9 +24,17 @@ export function ViewCellDialog({ cell, onClose, onSuccess }: ViewCellDialogProps
     const [isLeaderPickerOpen, setIsLeaderPickerOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [updateCell] = useUpdateCellMutation();
-    const [updateCellLeader] = useUpdateCellLeaderMutation();
+    const [assignCellLeader] = useAssignCellLeaderMutation();
 
     if (!cell) return null;
+
+    const handleAssignLeader = async (leaderId: string) => {
+        await assignCellLeader({
+            id: cell.id,
+            data: { leaderId }
+        }).unwrap();
+        onSuccess();
+    };
 
     return (
         <>
@@ -37,16 +45,16 @@ export function ViewCellDialog({ cell, onClose, onSuccess }: ViewCellDialogProps
                     </DialogHeader>
 
                     <div className="space-y-4">
-                        <p className="text-sm text-muted-foreground">{cell.description}</p>
+                        <p className="text-sm text-muted-foreground">{cell.description || "No description"}</p>
 
                         <div className="grid grid-cols-1 gap-2 text-sm">
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <Layers className="w-4 h-4" />
-                                <span>Zone: {cell.zoneName}</span>
+                                <span>Zone: {cell.zone?.name || "Not assigned"}</span>
                             </div>
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <MapPin className="w-4 h-4" />
-                                <span>Area: {cell.areaName}</span>
+                                <span>Area: {cell.zone?.area?.name || "Not assigned"}</span>
                             </div>
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <Calendar className="w-4 h-4" />
@@ -54,7 +62,10 @@ export function ViewCellDialog({ cell, onClose, onSuccess }: ViewCellDialogProps
                             </div>
                         </div>
 
-                        <LeaderCard leader={cell.leader} onChangeLeader={() => setIsLeaderPickerOpen(true)} />
+                        <LeaderCard 
+                            leader={cell.leader || null} 
+                            onChangeLeader={() => setIsLeaderPickerOpen(true)} 
+                        />
                     </div>
 
                     <DialogFooter>
@@ -73,11 +84,7 @@ export function ViewCellDialog({ cell, onClose, onSuccess }: ViewCellDialogProps
                 onClose={() => setIsLeaderPickerOpen(false)}
                 currentLeaderId={cell.leader?.id}
                 targetLabel={cell.name}
-                onAssign={(leaderId) =>
-                    updateCellLeader({ id: cell.id, data: { leaderId } })
-                        .unwrap()
-                        .then(() => onSuccess())
-                }
+                onAssign={handleAssignLeader}
             />
 
             <EditDetailsDialog
@@ -89,7 +96,7 @@ export function ViewCellDialog({ cell, onClose, onSuccess }: ViewCellDialogProps
                 }}
                 title="Edit cell"
                 initialName={cell.name}
-                initialDescription={cell.description}
+                initialDescription={cell.description ?? ""}
                 onSave={(data) => updateCell({ id: cell.id, data }).unwrap().then(() => onSuccess())}
             />
         </>

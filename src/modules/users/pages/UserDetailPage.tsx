@@ -222,7 +222,6 @@ export default function UserDetailPage() {
     const isPending = user.status === "PENDING_APPROVAL" || user.status === "PENDING_VERIFICATION";
     const isActive = user.status === "ACTIVE";
     const isSuspended = user.status === "SUSPENDED";
-    const isDeactivated = user.status === "DEACTIVATED";
 
     return (
         <div className="space-y-6">
@@ -280,7 +279,7 @@ export default function UserDetailPage() {
                                     Suspend
                                 </DropdownMenuItem>
                             )}
-                            {(isSuspended || isDeactivated) && (
+                            {(isSuspended) && (
                                 <DropdownMenuItem onClick={() => setActionDialog({ open: true, type: "activate" })}>
                                     <UserCheck className="w-4 h-4 mr-2 text-green-500" />
                                     Activate

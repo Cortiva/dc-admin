@@ -32,7 +32,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
                 url: `/users/${id}`,
                 method: "GET",
             }),
-            providesTags: (result, error, id) => [{ type: "Users", id }],
+            providesTags: (_, __, id) => [{ type: "Users", id }],
         }),
 
         getUserByMemberId: builder.query<UserResponse, string>({
@@ -40,7 +40,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
                 url: `/users/by-member/${memberId}`,
                 method: "GET",
             }),
-            providesTags: (result, error, memberId) => [
+            providesTags: (_, __, memberId) => [
                 { type: "Users", id: memberId },
             ],
         }),
@@ -79,13 +79,24 @@ export const userApiSlice = apiSlice.injectEndpoints({
                 method: "PUT",
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: "Users", id }],
+            invalidatesTags: (_, __, { id }) => [{ type: "Users", id }],
         }),
 
         deleteUser: builder.mutation<{ success: boolean }, string>({
             query: (id) => ({
                 url: `/users/${id}`,
                 method: "DELETE",
+            }),
+            invalidatesTags: ["Users"],
+        }),
+
+        // ─── Invite User ────────────────────────────────────────────────────
+
+        inviteMember: builder.mutation<UserResponse, any>({
+            query: (data) => ({
+                url: `/users/invite`,
+                method: "POST",
+                body: data,
             }),
             invalidatesTags: ["Users"],
         }),
@@ -101,7 +112,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
                 method: "POST",
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: "Users", id }],
+            invalidatesTags: (_, __, { id }) => [{ type: "Users", id }],
         }),
 
         rejectUser: builder.mutation<
@@ -113,7 +124,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
                 method: "POST",
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: "Users", id }],
+            invalidatesTags: (_, __, { id }) => [{ type: "Users", id }],
         }),
 
         suspendUser: builder.mutation<
@@ -125,7 +136,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
                 method: "POST",
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: "Users", id }],
+            invalidatesTags: (_, __, { id }) => [{ type: "Users", id }],
         }),
 
         activateUser: builder.mutation<
@@ -137,7 +148,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
                 method: "POST",
                 body: { activatedById },
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: "Users", id }],
+            invalidatesTags: (_, __, { id }) => [{ type: "Users", id }],
         }),
 
         deactivateUser: builder.mutation<
@@ -149,7 +160,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
                 method: "POST",
                 body: { deactivatedById, reason },
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: "Users", id }],
+            invalidatesTags: (_, __, { id }) => [{ type: "Users", id }],
         }),
 
         getPendingApprovalUsers: builder.query<UserResponse[], void>({
@@ -206,6 +217,7 @@ export const {
     useCreateUserMutation,
     useUpdateUserMutation,
     useDeleteUserMutation,
+    useInviteMemberMutation,
     useApproveUserMutation,
     useRejectUserMutation,
     useSuspendUserMutation,

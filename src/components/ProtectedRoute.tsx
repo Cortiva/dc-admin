@@ -23,7 +23,7 @@ export default function ProtectedRoute ({ children }: ProtectedRouteProps) {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    if ((user?.role !== "SUPER_ADMIN" && user?.role !== "ADMIN" && user?.role !== "MANAGER")) {
+    if ((user?.role !== "SUPER_ADMIN" && user?.role !== "ADMIN")) {
         return <Navigate to="/unauthorized" replace />;
     }
 

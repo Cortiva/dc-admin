@@ -26,6 +26,7 @@ import { useSearchVisitorsQuery, useExportVisitorsMutation } from "../visitorApi
 import { handleApiError, getInitials } from "../../../utils/functions";
 import type { VisitorProfileResponse } from "../../../types/visitor.types";
 import { formatDate } from "date-fns/format";
+import type { HowHeardAboutUs, VisitorStatus } from "../types/visitor.types";
 
 export default function VisitorListPage() {
     const navigate = useNavigate();
@@ -35,8 +36,8 @@ export default function VisitorListPage() {
         limit: 20,
         sortBy: "createdAt",
         sortOrder: "desc" as const,
-        status: undefined as string | undefined,
-        howHeardAboutUs: undefined as string | undefined,
+        status: undefined as VisitorStatus | undefined,
+        howHeardAboutUs: undefined as HowHeardAboutUs | undefined,
     });
 
     const { data, isLoading, refetch } = useSearchVisitorsQuery({
@@ -108,7 +109,7 @@ export default function VisitorListPage() {
                     <div className="flex gap-2 flex-wrap">
                         <Select
                             value={filters.status || "all"}
-                            onValueChange={(value) => setFilters(prev => ({ ...prev, status: value === "all" ? undefined : value }))}
+                            onValueChange={(value) => setFilters(prev => ({ ...prev, status: value === "all" ? undefined : value as VisitorStatus }))}
                         >
                             <SelectTrigger className="w-35">
                                 <SelectValue placeholder="Status" />
@@ -123,7 +124,7 @@ export default function VisitorListPage() {
 
                         <Select
                             value={filters.howHeardAboutUs || "all"}
-                            onValueChange={(value) => setFilters(prev => ({ ...prev, howHeardAboutUs: value === "all" ? undefined : value }))}
+                            onValueChange={(value) => setFilters(prev => ({ ...prev, howHeardAboutUs: value === "all" ? undefined : value as HowHeardAboutUs }))}
                         >
                             <SelectTrigger className="w-35">
                                 <SelectValue placeholder="How Heard" />
