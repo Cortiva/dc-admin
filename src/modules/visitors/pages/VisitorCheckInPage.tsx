@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, Loader2, UserPlus, Mail, Phone, MapPin, Calendar, User } from "lucide-react";
+import { ArrowLeft, Loader2, UserPlus, Mail, Phone, MapPin, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { useSelector } from "react-redux";
 import PageHeader from "../../../components/PageHeader";
